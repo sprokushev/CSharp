@@ -20,7 +20,16 @@ namespace TestApp
             //MathClass.CalcTriangleAngles(AB: 3, BC: 3, CA: 4, out A, out B, out C);
             //Console.WriteLine($"{A}, {B}, {C}");
             //Console.WriteLine(MathClass.CalcTriangleSquare(SideA: 3, SideB: 4, Alpha: 48.1896851, isInDegree: true));
-            MSOffice.OpenExcelWorkbook(@"D:\OneDrive\Documents\Семейная информация.xlsm", true, "", null);
+            //MSOffice.OpenExcelWorkbook(@"D:\OneDrive\Documents\Семейная информация.xlsm");
+
+            Console.WriteLine(SysUtils.RandomStr(30));
+            Console.WriteLine(SysUtils.RandomStr(30));
+            Console.WriteLine(SysUtils.RandomStr(30));
+            Console.WriteLine(SysUtils.RandomStr(30));
+            Console.WriteLine(SysUtils.RandomStr(30));
+            Console.WriteLine(SysUtils.RandomStr(30));
+            Console.WriteLine(SysUtils.RandomStr(30));
+
 
 
         }
