@@ -1,26 +1,35 @@
-﻿using Microsoft.Office.Interop.Excel;
+﻿using Excel = Microsoft.Office.Interop.Excel;
+using System.Reflection;
 using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace PSVClassLibrary
 {
+    /// <summary>Класс для работы с MS Office</summary>
     public class MSOffice
     {
 
-        public static void OpenExcelWorkbook(string FilePath) => OpenExcelWorkbook(FilePath, true, "", null);
-        public static void OpenExcelWorkbook(string FilePath, bool IsVisible) => OpenExcelWorkbook(FilePath, IsVisible, "", null);
+        /// <summary>Открыть файл Excel поверх текущего приложения</summary>
+        /// <param name="FilePath">Каталог и имя файла excel</param>
+        public static void OpenExcelWorkbook(string FilePath) => OpenExcelWorkbook(FilePath, "", null);
 
-        public static void OpenExcelWorkbook(string FilePath, bool IsVisible, string NameMacro,  object[] args)
+        /// <summary>Открыть файл Excel и выполнить макрос</summary>
+        /// <param name="FilePath">Каталог и имя файла excel</param>
+        /// <param name="NameMacro">Имя макроса</param>
+        /// <param name="args">массив аргументов макроса</param>
+        public static void OpenExcelWorkbook(string FilePath, string NameMacro,  object[] args)
         {
-            Application excel = new Application();
-            Workbook wb = excel.Workbooks.Open(FilePath);
-            excel.Visible = IsVisible;
+            Excel.Application excel = new Excel.Application();
+            Excel.Workbook wb = excel.Workbooks.Open(FilePath);
+            excel.Visible = true;
             try
             {
                 excel.Run(NameMacro, args);
             }
-            catch (Exception)
+            catch (Exception e)
+            {
+            }
+            finally
             {
             }
         }

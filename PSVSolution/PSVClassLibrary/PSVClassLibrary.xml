@@ -1,0 +1,151 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PSVClassLibrary</name>
+    </assembly>
+    <members>
+        <member name="M:D_OOP.ResourceHolder2.Dispose">
+            <summary>
+            temporal coupling between calls
+            </summary>
+        </member>
+        <member name="M:D_OOP.ResourceHolder.Dispose">
+            <summary>
+            temporal coupling between calls
+            </summary>
+        </member>
+        <member name="T:PSVClassLibrary.MathClass">
+            <summary>Класс математических методов.</summary>
+        </member>
+        <member name="M:PSVClassLibrary.MathClass.Factorial(System.Int32)">
+            <summary>Вычисляет факториал аргумента number, возвращает число типа BigInteger. Если number меньше 0 - возвращается BigInteger.Zero</summary>
+            <param name="number">Число типа int</param>
+            <returns>факториал числа number, тип BigInteger</returns>
+        </member>
+        <member name="M:PSVClassLibrary.MathClass.CalcTriangleAngles(System.Double,System.Double,System.Double,System.Double@,System.Double@,System.Double@)">
+            <summary>Вычисляет углы треугольника</summary>
+            <param name="AB">Сторона AB => 0</param>
+            <param name="BC">Сторона BC => 0</param>
+            <param name="CA">Сторона CA => 0</param>
+            <param name="A">Угол BAC - возвращаемое значение. Если угол нельзя рассчитать - возвращается значение NaN</param>
+            <param name="B">Угол ABC - возвращаемое значение. Если угол нельзя рассчитать - возвращается значение NaN</param>
+            <param name="C">Угол BCA - возвращаемое значение. Если угол нельзя рассчитать - возвращается значение NaN</param>
+        </member>
+        <member name="M:PSVClassLibrary.MathClass.CalcTriangleSquare(System.Double,System.Double,System.Double)">
+            <summary>Расчет площади треугольника, возвращает число типа double. Если площадь рассчитать невозможно - возвращает NaN.</summary>
+            <param name="AB">Сторона AB</param>
+            <param name="BC">Сторона BC</param>
+            <param name="CA">Сторона CA</param>
+            <returns>Площадь треугольника типа double</returns>
+        </member>
+        <member name="M:PSVClassLibrary.MathClass.CalcTriangleSquare(System.Double,System.Double)">
+            <summary>Расчет площади треугольника, возвращает double</summary>
+            <param name="TriangleBase">Основание треугольника</param>
+            <param name="TriangleHeght">Высота треугольника</param>
+            <returns>Площадь треугольника, тип double</returns>
+        </member>
+        <member name="M:PSVClassLibrary.MathClass.CalcTriangleSquare(System.Double,System.Double,System.Double,System.Boolean)">
+            <summary>Расчет площади треугольника, возвращает double. Если площадь рассчитать невозможно - возвращает NaN.</summary>
+            <param name="AB">Сторона AB</param>
+            <param name="CA">Сторона CA</param>
+            <param name="Alpha">Угол между сторонами AB и CA</param>
+            <param name="isInDegree">Если true - угол в градусах, если false - в радианах</param>
+            <returns>Площадь треугольника, тип double</returns>
+        </member>
+        <member name="M:PSVClassLibrary.MathClass.CalcAvg(System.Double[])">
+            <summary>Расчет среднего значения чисел в массиве values, возвращает значение типа double. Если массив values пустой - возвращает NaN.</summary>
+            <param name="values">Массив чисел для расчета среднего значения</param>
+            <returns>Среднее значение чисел в массиве values.</returns>
+        </member>
+        <member name="T:PSVClassLibrary.MSOffice">
+            <summary>Класс для работы с MS Office</summary>
+        </member>
+        <member name="M:PSVClassLibrary.MSOffice.OpenExcelWorkbook(System.String)">
+            <summary>Открыть файл Excel поверх текущего приложения</summary>
+            <param name="FilePath">Каталог и имя файла excel</param>
+        </member>
+        <member name="M:PSVClassLibrary.MSOffice.OpenExcelWorkbook(System.String,System.String,System.Object[])">
+            <summary>Открыть файл Excel и выполнить макрос</summary>
+            <param name="FilePath">Каталог и имя файла excel</param>
+            <param name="NameMacro">Имя макроса</param>
+            <param name="args">массив аргументов макроса</param>
+        </member>
+        <member name="T:PSVClassLibrary.RandomGUID">
+            <summary>Случайное число на базе GUID с возможность вывода в формате строки определенной длинны, дополненной слева 0. </summary>
+        </member>
+        <member name="F:PSVClassLibrary.RandomGUID.DefaultMaxLengthRandomStr">
+            <summary>  Размер строки по умолчанию, возвращаемый <see cref="M:PSVClassLibrary.RandomGUID.ToString"/></summary>
+        </member>
+        <member name="M:PSVClassLibrary.RandomGUID.#ctor">
+            <summary>  Конструктор класса <see cref="T:PSVClassLibrary.RandomGUID"/>.
+            По умолчанию значение seed value = int.Parse(Guid.NewGuid().ToString().Substring(0, 8), System.Globalization.NumberStyles.HexNumber)</summary>
+        </member>
+        <member name="M:PSVClassLibrary.RandomGUID.ToString">
+            <summary>Случайное число на базе GUID в формате строки длинной по умолчанию <see cref="F:PSVClassLibrary.RandomGUID.DefaultMaxLengthRandomStr"/>, дополненной слева 0</summary>
+            <returns>Строка</returns>        
+        </member>
+        <member name="M:PSVClassLibrary.RandomGUID.ToString(System.Int32)">
+            <summary>Случайное число на базе GUID в формате строки длинной MaxLength, дополненной слева 0</summary>
+            <param name="MaxLength">Длина строки</param>
+            <returns>Строка</returns>
+        </member>
+        <member name="M:PSVClassLibrary.RandomGUID.FormatString(System.String,System.Int32)">
+            <summary>Отформатировать вывод методов Next(), NextDouble(), NextByte(), Sample() в соответствии с правилами класса</summary>
+            <param name="_str">Форматируемая строка</param>
+            <param name="MaxLength">Длина строки</param>
+            <returns>Строка</returns>
+            <example>FormatString(Next().ToString(),12)
+            <code></code></example>
+        </member>
+        <member name="T:PSVClassLibrary.RomanNumeric">
+            <summary>
+            Класс предназначен для преобразований арабских чисел в римские и обратно
+            <para>Класс изначально содержит алфавит римских чисел, способных определять арабские числа от 1 до 39999.
+            Если необходимо расширить диапазон, то можно определить дополнительные обозначения для римских чисел, используя
+            поле <see cref="P:PSVClassLibrary.RomanNumeric.BaseRomanNumbers"/> </para>
+            </summary>
+        </member>
+        <member name="P:PSVClassLibrary.RomanNumeric.BaseRomanNumbers">
+            <summary>
+            Алфавит базовых римских чисел
+            <para>Алфавит построен в виде словаря. Ключом словаря является арабское число (int), значением - соответствующее ему
+            римское число (string)</para>
+            <para>Содержит римское обозначения арабских чисел 1*,4*,5*,9* - где "*"представляет собой 0...N нулей.
+            При создании содержит в себе обозначение чисел от 1 до 10000 (I...ↂ). Так как в римском числе один символ не может
+            встречаться более трех раз, то изначально можно преобразовать в римский формат числа от 1 до 39999. 
+            Если Вы хотите иметь возможность работать с большим количеством римских чисел, то вы должны добавить в список 
+            дополнительные обозначения начиная с 40000 не пропуская элементы 1*,4*,5*,9*.</para>
+            </summary>
+        </member>
+        <member name="M:PSVClassLibrary.RomanNumeric.MaxRomanNumber">
+            <summary>
+            Рассчитывает максимально возможное римское число для текущего алфавита римских чисел.
+            </summary>
+        </member>
+        <member name="M:PSVClassLibrary.RomanNumeric.ArabicToRoman(System.Int32)">
+            <summary>
+            Конвентирует целое число в римское число
+            </summary>
+            <param name="ArabicNumber">Арабское число, которое необходимо преобразовать в римскую запись</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Генерируется когда в качестве параметра передано число равное "0" 
+            или число большее чем максимальная римское число.</exception>
+            <returns>Строку, представляющую собой римской число</returns>
+        </member>
+        <member name="M:PSVClassLibrary.RomanNumeric.RomanToArabic(System.String)">
+            <summary>
+            Конвентирует римское число в арабское
+            </summary>
+            <param name="RomanNumber">Римское число, которое необходимо преобразовать в тип int</param>
+            <exception cref="T:System.FormatException">Генерируется когда в качестве параметра передано число не являющееся римским</exception>
+            <returns>Целое число, представляющее собой арабскую запись римского числа</returns>
+        </member>
+        <member name="T:PSVClassLibrary.StringClass">
+            <summary>Класс для ряботы со строками</summary>
+        </member>
+        <member name="M:PSVClassLibrary.StringClass.ReplaceSystemNames(System.String)">
+            <summary>Заменить в строке %USERNAME%, %TERMINAL% на имя пользователя и компьютера. Результирующая строка преобразуется в верхний регистр</summary>
+            <param name="s">Исходная строка</param>
+            <returns>Строка</returns>        
+        </member>
+    </members>
+</doc>
