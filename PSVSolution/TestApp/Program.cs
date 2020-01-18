@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using PSVClassLibrary;
 
 
@@ -8,6 +9,27 @@ namespace TestApp
     {
         static void Main(string[] args)
         {
+
+            do
+            {
+                TicTacToeGame game = new TicTacToeGameConsole(3, TicTacToeGame.CellValues.Cross, 3, TicTacToeGame.PlayerTypes.Machine, TicTacToeGame.PlayerTypes.Human);
+                game.Start();
+                Console.WriteLine("Сыграем еще (y/n)?");
+            } while (Console.ReadLine().ToUpper()=="Y");
+
+            Console.ReadLine();
+
+            Console.WriteLine(Test("2 4 7 8 10"));
+            Console.WriteLine(Test("1 2 1 1"));
+            Console.ReadLine();
+            
+            var array = ArrayClass.ArrayDiff<int>(new int[] { 1, 2, 2, 2, 3 }, new int[] { 1, 3 });
+            foreach (var ii in array)
+            {
+                Console.WriteLine(ii);
+            }
+
+            Console.ReadLine();
 
             var r = new RandomGUID();
             var rr = new RandomGUID();
@@ -47,6 +69,49 @@ namespace TestApp
             
             
 
+        }
+
+
+        public static string AddBinary(int a, int b)
+        {
+            return Convert.ToString(a + b, 2);
+        }
+
+
+        public static int Test(string numbers)
+        {
+            string[] str_array = numbers.Split(' ');
+            int num=0;
+            int odd_num = 0;
+            int odd_count = 0;
+            int even_num = 0;
+            int even_count = 0;
+
+
+
+            for (int i=str_array.Length-1; i>=0; i--)
+            {
+                int.TryParse(str_array[i], out num);
+                if (num%2==0)
+                {
+                    even_num = i+1;
+                    even_count++;
+                }
+                else
+                {
+                    odd_num = i+1;
+                    odd_count++;
+                }
+            }
+
+            if (even_count > odd_count)
+            {
+                return odd_num;
+             }
+            else
+            {
+                return even_num;
+            }
         }
     }
 }

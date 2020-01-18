@@ -4,15 +4,15 @@
         <name>PSVClassLibrary</name>
     </assembly>
     <members>
-        <member name="M:D_OOP.ResourceHolder2.Dispose">
-            <summary>
-            temporal coupling between calls
-            </summary>
+        <member name="T:PSVClassLibrary.ArrayClass">
+            <summary>Методы работы с массивами</summary>
         </member>
-        <member name="M:D_OOP.ResourceHolder.Dispose">
-            <summary>
-            temporal coupling between calls
-            </summary>
+        <member name="M:PSVClassLibrary.ArrayClass.ArrayDiff``1(``0[],``0[])">
+            <summary>Вычесть из массива a[] значения массива b[]</summary>
+            <typeparam name="T">Тип элемента массива</typeparam>
+            <param name="a">Массив a[] - из него вычистается массив b[]</param>
+            <param name="b">Массив b[] - он вычитаетсяиз массива a[]</param>
+            <returns>Массив значений - результат вычитания</returns>
         </member>
         <member name="T:PSVClassLibrary.MathClass">
             <summary>Класс математических методов.</summary>
@@ -146,6 +146,280 @@
             <summary>Заменить в строке %USERNAME%, %TERMINAL% на имя пользователя и компьютера. Результирующая строка преобразуется в верхний регистр</summary>
             <param name="s">Исходная строка</param>
             <returns>Строка</returns>        
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGame">
+            <summary>Абстраткный класс игры "Крестики-Нолики"</summary>
+            <seealso cref="T:PSVClassLibrary.TicTacToeGameConsole"/>
+            <seealso cref="T:PSVClassLibrary.TicTacToeGameDesktop"/>
+            <seealso cref="T:PSVClassLibrary.TicTacToeGameWeb"/>
+            <seealso cref="T:PSVClassLibrary.TicTacToeGameTelegram"/>
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGame.PlayerTypes">
+            <summary>Варианты игроков</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.PlayerTypes.Human">
+            <summary>Человек</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.PlayerTypes.Machine">
+            <summary>Компьютер</summary>
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGame.Player">
+            <summary>Класс "Игрок"</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Player.PlayerType">
+            <summary>Тип игрока</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Player.CellValue">
+            <summary>Чем игрок играет (Крестик или Нолик)</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Player.Order">
+            <summary>  Номер игрока по порядку</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Player.Variants">
+            <summary>Список возможных победных вариантов для следущего хода</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Player.NextCell">
+            <summary>Рекомендация на следующий ход</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Player.History">
+            <summary>История ходов игрока в текущей игре</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Player.Result">
+            <summary>Результат игры для данного игрока</summary>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.Player.#ctor(System.Int32,PSVClassLibrary.TicTacToeGame.PlayerTypes,PSVClassLibrary.TicTacToeGame.CellValues)">
+            <summary>Инициализация экземпляра класса <see cref="T:PSVClassLibrary.TicTacToeGame.Player"/></summary>
+            <param name="order">Номер игрока по порядку</param>
+            <param name="playerType">Тип игрока</param>
+            <param name="cellValue">Чем играет игрок (Крестик или Нолик)</param>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.CountPlayers">
+            <summary>Кол-во игроков в игре</summary>
+        </member>
+        <member name="P:PSVClassLibrary.TicTacToeGame.Players">
+            <summary>Игроки</summary>
+        </member>
+        <member name="P:PSVClassLibrary.TicTacToeGame.CurrentPlayer">
+            <summary>Текущий игрок</summary>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.InitPlayers(PSVClassLibrary.TicTacToeGame.CellValues,PSVClassLibrary.TicTacToeGame.PlayerTypes[])">
+            <summary>Инициализация игроков при старте игры</summary>
+            <param name="startCellType">Чем ходит первый игрок (по умолчанию "Крестик")</param>
+            <param name="playerTypes">Типы игроков - по порядку</param>
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGame.CellValues">
+            <summary>Варианты значений ячеек</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.CellValues.Cross">
+            <summary>Крестик</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.CellValues.Empty">
+            <summary>Пусто</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.CellValues.Zero">
+            <summary>Нолик</summary>
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGame.Cell">
+            <summary>Класс "Ячейка игрового поля"</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Cell.Dimension">
+            <summary>Размерность игрового поля</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Cell.Line">
+            <summary>Строка</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Cell.Column">
+            <summary>Колонка</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Cell.CellValue">
+            <summary>Значение в ячейке (Крестик, Нолик или пустое)</summary>
+        </member>
+        <member name="P:PSVClassLibrary.TicTacToeGame.Cell.NumCell">
+            <summary>Свойство NumCell собирает номер ячейки на игровом поле из Line и Column. В случае присоения значения свойству NumCell - соответствующими значениями заполняются Line и Column</summary>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.Cell.#ctor(System.Int32,System.Int32,PSVClassLibrary.TicTacToeGame.CellValues)">
+            <summary>Инициализация класса <see cref="T:PSVClassLibrary.TicTacToeGame.Step"/></summary>
+            <param name="dimension">Размерность игрового поля</param>
+            <param name="numCell">Номер ячейки на поле</param>
+            <param name="cellValue">Тип заполнения (Крестик или Нолик)</param>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.Cell.#ctor(System.Int32,System.Int32,System.Int32,PSVClassLibrary.TicTacToeGame.CellValues)">
+            <summary>Инициализация класса <see cref="T:PSVClassLibrary.TicTacToeGame.Step"/></summary>
+            <param name="dimension">Размерность игрового поля</param>
+            <param name="line">Номер строки на поле</param>
+            <param name="column">Номер колонки на поле</param>
+            <param name="cellValue">  Тип заполнения (Крестик или Нолик)</param>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.Cell.ToString">
+            <summary>Переопределение Cell.ToString</summary>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.Cell.CellAsString(PSVClassLibrary.TicTacToeGame.CellValues)">
+            <summary>Текстовое отображение значения ячейки</summary>
+            <param name="cellValue">The cell value.</param>
+            <returns></returns>
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGame.TableGame">
+            <summary>Класс "Игровое поле"</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.TableGame.Dimension">
+            <summary>Размерность игрового поля</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.TableGame.MinNumCell">
+            <summary>Минимальный номер ячейки, разрешенный для хода игрока</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.TableGame.MaxNumCell">
+            <summary>Максимальный номер ячейки, разрешенный для хода игрока</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.TableGame.Cells">
+            <summary>  Ячейки игрового поля</summary>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.TableGame.CellByNum(System.Int32)">
+            <summary>Найти ячейку по номеру, вернуть ссылку на эту ячейку</summary>
+            <param name="numCell">Номер ячейки</param>
+            <returns></returns>
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGame.TableGame.TableDraw">
+            <summary>Варианты отображения TableGame.ToString()</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.TableGame.TableDraw.Empty">
+            <summary>пустое игровое поле</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.TableGame.TableDraw.Numbers">
+            <summary>Пронумерованное игровое поле</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.TableGame.TableDraw.Values">
+            <summary>Текущая игровая ситуация</summary>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.TableGame.ToString">
+            <summary>Текстовое отображение игрового поля</summary>
+        </member>
+        <member name="P:PSVClassLibrary.TicTacToeGame.Table">
+            <summary>Текущее игровое поле</summary>
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGame.Step">
+            <summary>класс "Ход игрока"</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Step.Cell">
+            <summary>Ячейка на игровом поле</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.Step.Result">
+            <summary>Результат хода</summary>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.Step.#ctor(System.Int32,System.Int32,PSVClassLibrary.TicTacToeGame.CellValues)">
+            <summary>Инициализация класса <see cref="T:PSVClassLibrary.TicTacToeGame.Step"/></summary>
+            <param name="dimension">Размерность игрового поля</param>
+            <param name="numCell">Номер ячейки на поле</param>
+            <param name="cellValue">Тип заполнения (Крестик или Нолик)</param>
+        </member>
+        <member name="P:PSVClassLibrary.TicTacToeGame.MaxVictoryLine">
+            <summary>  Максимальная длина победной линии</summary>
+            <value>The maximum victory line.</value>
+        </member>
+        <member name="P:PSVClassLibrary.TicTacToeGame.VictoryVariants">
+            <summary>Победные варианты для следующего хода</summary>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.InitVictoryVariants">
+            <summary>Инициализация коллекции победных вариантов</summary>
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGame.StatusTypes">
+            <summary>Варианты состояний игры</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.StatusTypes.Start">
+            <summary>Старт игры</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.StatusTypes.Recomend">
+            <summary>Рекомендации для игрока</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.StatusTypes.Turn">
+            <summary>Ход игрока</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.StatusTypes.Finish">
+            <summary>Завершение игры</summary>
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGame.ResultTypes">
+            <summary>Варианты результатов хода</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.ResultTypes.Play">
+            <summary>Продолжаем играть</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.ResultTypes.NoVictory">
+            <summary>Игра завершилась без победы кого-либо</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.ResultTypes.Victory">
+            <summary>Игра завершилась победой игрока</summary>
+        </member>
+        <member name="F:PSVClassLibrary.TicTacToeGame.ResultTypes.Loss">
+            <summary>Игра завершилась поражением игрока</summary>
+        </member>
+        <member name="P:PSVClassLibrary.TicTacToeGame.Status">
+            <summary>Текущий статус игры</summary>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.#ctor(System.Int32,PSVClassLibrary.TicTacToeGame.CellValues,System.Int32,PSVClassLibrary.TicTacToeGame.PlayerTypes[])">
+            <summary>Конструктор экземпляра класса <see cref="T:PSVClassLibrary.TicTacToeGame"/></summary>
+            <param name="dimension">Размерность игрового поля (по умолчанию = 3)</param>
+            <param name="startCellType">Чем ходит первый игрок (по умолчанию "Крестик")</param>
+            <param name="playerTypes">Типы игроков - по порядку</param>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.Start">
+            <summary>Начать игру</summary>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.Recomendation(PSVClassLibrary.TicTacToeGame.Player)">
+            <summary>Генерация для игрока рекомендаций на следующий ход</summary>
+            <param name="player">Экземпляр класса Player</param>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.Turn(PSVClassLibrary.TicTacToeGame.Player)">
+            <summary>Ход</summary>
+            <param name="player">Экземпляр класса Player</param>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.Check(PSVClassLibrary.TicTacToeGame.Player)">
+            <summary>Проверка результатов хода</summary>
+            <param name="player">Экземпляр класса Player</param>
+            <returns>
+              <para>ResultTypes.Victory - победа игрока</para>
+              <para>ResultTypes.Play - продолжаем играть</para>
+              <para>ResultTypes.NoVictory - игра завершилась без победы</para>
+              <para></para>
+            </returns>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.AskPlayer(PSVClassLibrary.TicTacToeGame.Player)">
+            <summary>Запрос следующего хода игрока, возвращает экземпляр Cell</summary>
+            <param name="player">Экземпляр игрока</param>
+            <returns></returns>
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGame.Draw">
+            <summary>Отрисовка игрового интерфейса с учетом текущей игровой ситуации</summary>
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGameConsole">
+            <summary>Консольная версия игры "Крестики-Нолики"</summary>
+            <seealso cref="T:PSVClassLibrary.TicTacToeGame" />
+        </member>
+        <member name="M:PSVClassLibrary.TicTacToeGameConsole.#ctor(System.Int32,PSVClassLibrary.TicTacToeGame.CellValues,System.Int32,PSVClassLibrary.TicTacToeGame.PlayerTypes[])">
+            <summary>Конструктор экземпляра класса <see cref="T:PSVClassLibrary.TicTacToeGameConsole"/></summary>
+            <param name="dimension">Размерность игрового поля (по умолчанию = 3)</param>
+            <param name="startCellType">Чем ходит первый игрок (по умолчанию "Крестик")</param>
+            <param name="playerTypes">Типы игроков - по порядку</param>
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGameDesktop">
+            <summary>Декстопная версия игры "Крестики-Нолики"</summary>
+            <seealso cref="T:PSVClassLibrary.TicTacToeGame" />
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGameWeb">
+            <summary>Web-версия игры "Крестики-Нолики"</summary>
+            <seealso cref="T:PSVClassLibrary.TicTacToeGame" />
+        </member>
+        <member name="T:PSVClassLibrary.TicTacToeGameTelegram">
+            <summary>Telegram-версия игры "Крестики-Нолики"</summary>
+            <seealso cref="T:PSVClassLibrary.TicTacToeGame" />
+        </member>
+        <member name="M:D_OOP.ResourceHolder2.Dispose">
+            <summary>
+            temporal coupling between calls
+            </summary>
+        </member>
+        <member name="M:D_OOP.ResourceHolder.Dispose">
+            <summary>
+            temporal coupling between calls
+            </summary>
         </member>
     </members>
 </doc>

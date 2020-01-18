@@ -1,0 +1,1 @@
+dotnet new console -o %1
