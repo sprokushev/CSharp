@@ -48,13 +48,13 @@ namespace PSVClassLibrary
     class ArgApp
     {
         public string token { get; set; }
-        public Currency currency { get; private set; }
+        //public Currency currency { get; private set; }
         public ResultTypes result { get; private set; }
 
         public ArgApp()
         {
             token = "";
-            currency = Tinkoff.Trading.OpenApi.Models.Currency.Rub;
+            //currency = Tinkoff.Trading.OpenApi.Models.Currency.Rub;
             result = ResultTypes.Sum;
         }
 
@@ -98,7 +98,7 @@ namespace PSVClassLibrary
             else throw new FileNotFoundException($"Файл {value} не существует!");
         }
 
-        [Global(Description = "запросить активы, номинированные в указанной валюте. Возможные значения: rub, usd или eur. По умолчанию = rub", Aliases = "c")]
+ /*       [Global(Description = "запросить активы, номинированные в указанной валюте. Возможные значения: rub, usd или eur. По умолчанию = rub", Aliases = "c")]
         public void Currency(string value)
         {
             value = value.ToLower();
@@ -115,7 +115,7 @@ namespace PSVClassLibrary
                     currency = Tinkoff.Trading.OpenApi.Models.Currency.Rub;
                     break;
             }
-        }
+        }*/
 
         [Global(Description = "list - вывести на экран список активов со стоимостью в указанной валюте; sum - вывести на экран общую сумму активов, номинированных в указанной валюте. По умолчанию = sum", Aliases = "r")]
         public void Result(string value)
@@ -139,6 +139,7 @@ namespace PSVClassLibrary
     {
 
         public const string keyName = "HKEY_CURRENT_USER\\Software\\PSV";
+        public const string delim = "\t";
 
         private static decimal Summa = 0;
 
@@ -180,7 +181,7 @@ namespace PSVClassLibrary
                 string error = ex.Message;
                 if (ex.InnerException != null) error = ex.InnerException.Message;
 
-                argApp.WriteErrorToLog(logfile, error);
+                argApp.WriteErrorToLog(logfile, ex.ToString());
                 Console.WriteLine(error);
 
                 argApp.Help(argParser.GetHelpString());
@@ -190,7 +191,23 @@ namespace PSVClassLibrary
 
 
             // запрашиваем информацию из банка
-            DoWorkAsync(argApp).Wait();
+            try
+            {
+                DoWorkAsync(argApp).Wait();
+            }
+            catch (Exception ex)
+            {
+                string logfile = Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetExecutingAssembly().Location) + ".log";
+
+                string error = ex.Message;
+                if (ex.InnerException != null) error = ex.InnerException.Message;
+
+                argApp.WriteErrorToLog(logfile, ex.ToString());
+                Console.WriteLine(error);
+
+                return -1;
+            }
+
 
             return decimal.ToInt32(Summa);
         }
@@ -202,25 +219,65 @@ namespace PSVClassLibrary
             var portfolio = await context.PortfolioAsync();
             var portfolioCurrency = await context.PortfolioCurrenciesAsync();
 
-            var pos_papers = from p in portfolio.Positions where (p.AveragePositionPrice.Currency == Currency.Rub) select p;
-            var pos_currencies = from p in portfolioCurrency.Currencies where (p.Currency == Currency.Rub) select p;
-            decimal value=0;
-            int count = 0;
+            // определяю курсы доллара и евро - пока заглушка, делаю через остатки наличных
+            decimal usd = 0;
+            decimal eur = 0;
 
-            foreach (var pos in pos_papers)
+            var pos_usd = from p in portfolio.Positions where (p.InstrumentType==InstrumentType.Currency) select p;
+            foreach (var pos in pos_usd)
             {
-                value = decimal.Round(pos.Balance*pos.AveragePositionPrice.Value + pos.ExpectedYield.Value);
-                if (argApp.result ==ResultTypes.List) 
-                    Console.WriteLine($"{pos.Ticker,-20}\t{pos.InstrumentType}\t{pos.Balance}\t{value}\t{pos.AveragePositionPrice.Currency}");
-                Summa += value;
-                count += decimal.ToInt32(pos.Balance);
+                if (pos.Ticker == "USD000UTSTOM")
+                {
+                    usd = (pos.Balance * pos.AveragePositionPrice.Value + pos.ExpectedYield.Value) / pos.Balance;
+                    //Console.WriteLine($"USD={usd}");
+                }
             }
 
+            // перебираю ценные бумаги
+            decimal count = 0;
+            decimal price = 0;
+            decimal value = 0;
+            decimal original_price = 0;
+            decimal original_value = 0;
+            var pos_papers = from p in portfolio.Positions select p;
+            foreach (var pos in pos_papers)
+            {
+                // текущая стоимость всех бумаг в портфеле (в валюте)
+                value = pos.Balance*pos.AveragePositionPrice.Value + pos.ExpectedYield.Value;
+                original_price = value / pos.Balance;
+                original_value = value;
+                // переводим валюту в рубли
+                string curs_info = "";
+                if (pos.AveragePositionPrice.Currency == Currency.Usd) 
+                    { value *= usd; curs_info = $", USD={Math.Round(usd,4)} руб."; }
+                if (pos.AveragePositionPrice.Currency == Currency.Eur) 
+                    { value *= eur; curs_info = $", EUR={Math.Round(eur, 4)} руб."; }
+                // пересчитываем 
+                value = decimal.Round(value,2);
+                price = decimal.Round(value / pos.Balance,2);
+
+                if (argApp.result == ResultTypes.List)
+                {
+                    Console.Write($"{pos.Ticker,-20}{delim}{pos.InstrumentType,-10}{delim}{pos.Balance,-10}{delim}{price,-10}{delim}{value,-10}{delim}{Currency.Rub}");
+
+                    if (pos.AveragePositionPrice.Currency != Currency.Rub)
+                    {
+                        Console.Write($"{delim}{original_value} {pos.AveragePositionPrice.Currency}{curs_info}");
+                    }
+                    else Console.Write($"{delim}");
+                    Console.WriteLine();
+                }
+                Summa += value;
+                count += pos.Balance;
+            }
+
+            // остатки рублей
+            var pos_currencies = from p in portfolioCurrency.Currencies where (p.Currency == Currency.Rub) select p;
             foreach (var pos in pos_currencies)
             {
-                value = decimal.Round(pos.Balance);
+                value = decimal.Round(pos.Balance,2);
                 if (argApp.result == ResultTypes.List)
-                    Console.WriteLine($"{"Наличные",-20}\t{"-"}\t{"0"}\t{value}\t{pos.Currency}");
+                    Console.WriteLine($"{"Рубли",-20}{delim}{"Currency",-10}{delim}{value,-10}{delim}{1,-10}{delim}{value,-10}{delim}{pos.Currency}");
                 Summa += value;
             }
             
