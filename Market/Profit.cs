@@ -199,6 +199,10 @@ namespace Market
                         {
                             FillProfit(ProfitSheet, count_rows, ticker, null, HistorySheet);
                         }
+
+                        if (this.Application != null)
+                            this.Application.StatusBar = $"Заполняем лист {ExcelProfitName} - {ticker}";
+
                     }
 
                     // все, что не найдено - добавляем в конец таблицы
@@ -212,6 +216,8 @@ namespace Market
                                 count_rows++;
                                 FillProfit(ProfitSheet, count_rows, ticker, item, HistorySheet);
 
+                                if (this.Application != null)
+                                    this.Application.StatusBar = $"Заполняем лист {ExcelProfitName} - {ticker}";
                             }
                         }
                     }
@@ -219,7 +225,7 @@ namespace Market
                     // итоги
                     count_rows++;
                     ProfitSheet.Cells[count_rows, 4].FormulaR1C1 = $"=SUBTOTAL(9,R[{2- count_rows}]C:R[-1]C)";
-                    ProfitSheet.Cells[count_rows, 16].FormulaR1C1 = $"=SUBTOTAL(9,R[{2 - count_rows}]C:R[-1]C)";
+                    ProfitSheet.Cells[count_rows, 17].FormulaR1C1 = $"=SUBTOTAL(9,R[{2 - count_rows}]C:R[-1]C)";
 
                     max_columns = ProfitSheet.UsedRange.Columns.Count;
                     if (max_rows > count_rows)
@@ -292,40 +298,40 @@ namespace Market
                 if ((item == null) || (item.Count == 0))
                 {
                     // позиции из "доходности" нет в портфелях или кол-во равно 0 - обнуляем (распродал)
-                    ProfitSheet.Cells[Row, 4] = "";
-                    ProfitSheet.Cells[Row, 8] = "";
-                    ProfitSheet.Cells[Row, 13] = "";
+                    ProfitSheet.Cells[Row, 5] = "";
+                    ProfitSheet.Cells[Row, 9] = "";
+                    ProfitSheet.Cells[Row, 14] = "";
                 }
                 else
                 {
                     ProfitSheet.Cells[Row, 1] = ticker;
                     ProfitSheet.Cells[Row, 2] = item.name;
-                    ProfitSheet.Cells[Row, 3] = item.InstrumentTypeName;
+                    ProfitSheet.Cells[Row, 4] = item.InstrumentTypeName;
                     if (item.Count > 0) 
                         if (item.IsCurrency)
-                            ProfitSheet.Cells[Row, 8] = item.Count;
+                            ProfitSheet.Cells[Row, 9] = item.Count;
                         else
-                            ProfitSheet.Cells[Row, 4] = item.Count;
-                    if (item.Nominal > 0) ProfitSheet.Cells[Row, 5] = item.Nominal;
-                    ProfitSheet.Cells[Row, 6] = item.currency;
-                    if ((item.Summa > 0) && (! item.IsCurrency)) ProfitSheet.Cells[Row, 8] = item.Summa;
-                    if (item.MarketSumma > 0) ProfitSheet.Cells[Row, 13] = item.MarketSumma;
+                            ProfitSheet.Cells[Row, 5] = item.Count;
+                    if (item.Nominal > 0) ProfitSheet.Cells[Row, 6] = item.Nominal;
+                    ProfitSheet.Cells[Row, 7] = item.currency;
+                    if ((item.Summa > 0) && (! item.IsCurrency)) ProfitSheet.Cells[Row, 9] = item.Summa;
+                    if (item.MarketSumma > 0) ProfitSheet.Cells[Row, 14] = item.MarketSumma;
 
                     if (Row>10)
                     {
                         // копируем формулы из предыдущей строки
-                        ProfitSheet.Cells[Row, 7].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 7].FormulaR1C1;
-                        ProfitSheet.Cells[Row, 9].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 9].FormulaR1C1;
+                        ProfitSheet.Cells[Row, 8].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 8].FormulaR1C1;
                         ProfitSheet.Cells[Row, 10].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 10].FormulaR1C1;
                         ProfitSheet.Cells[Row, 11].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 11].FormulaR1C1;
                         ProfitSheet.Cells[Row, 12].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 12].FormulaR1C1;
-                        ProfitSheet.Cells[Row, 14].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 14].FormulaR1C1;
+                        ProfitSheet.Cells[Row, 13].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 13].FormulaR1C1;
                         ProfitSheet.Cells[Row, 15].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 15].FormulaR1C1;
                         ProfitSheet.Cells[Row, 16].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 16].FormulaR1C1;
                         ProfitSheet.Cells[Row, 17].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 17].FormulaR1C1;
                         ProfitSheet.Cells[Row, 18].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 18].FormulaR1C1;
                         ProfitSheet.Cells[Row, 19].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 19].FormulaR1C1;
                         ProfitSheet.Cells[Row, 20].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 20].FormulaR1C1;
+                        ProfitSheet.Cells[Row, 21].FormulaR1C1 = ProfitSheet.Cells[Row - 1, 21].FormulaR1C1;
                     }
 
 
@@ -356,15 +362,15 @@ namespace Market
                                 HistorySheet.Cells[_count, 3] = 1;
                             else
                                 HistorySheet.Cells[_count, 3] = 0;
-                            HistorySheet.Cells[_count, 4] = ProfitSheet.Cells[Row, 4];
-                            HistorySheet.Cells[_count, 5] = ProfitSheet.Cells[Row, 6];
-                            HistorySheet.Cells[_count, 6] = ProfitSheet.Cells[Row, 7];
-                            HistorySheet.Cells[_count, 7] = ProfitSheet.Cells[Row, 8];
-                            HistorySheet.Cells[_count, 8] = ProfitSheet.Cells[Row, 9];
-                            HistorySheet.Cells[_count, 9] = ProfitSheet.Cells[Row, 11];
-                            HistorySheet.Cells[_count, 10] = ProfitSheet.Cells[Row, 13];
-                            HistorySheet.Cells[_count, 11] = ProfitSheet.Cells[Row, 14];
-                            HistorySheet.Cells[_count, 12] = ProfitSheet.Cells[Row, 16];
+                            HistorySheet.Cells[_count, 4] = ProfitSheet.Cells[Row, 5];
+                            HistorySheet.Cells[_count, 5] = ProfitSheet.Cells[Row, 7];
+                            HistorySheet.Cells[_count, 6] = ProfitSheet.Cells[Row, 8];
+                            HistorySheet.Cells[_count, 7] = ProfitSheet.Cells[Row, 9];
+                            HistorySheet.Cells[_count, 8] = ProfitSheet.Cells[Row, 10];
+                            HistorySheet.Cells[_count, 9] = ProfitSheet.Cells[Row, 12];
+                            HistorySheet.Cells[_count, 10] = ProfitSheet.Cells[Row, 14];
+                            HistorySheet.Cells[_count, 11] = ProfitSheet.Cells[Row, 15];
+                            HistorySheet.Cells[_count, 12] = ProfitSheet.Cells[Row, 17];
                         }
                     }
                 }

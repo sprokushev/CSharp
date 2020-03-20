@@ -76,7 +76,7 @@ namespace Market
 
                         // запрашиваем котировки
                         if (this.Application != null)
-                            this.Application.StatusBar = $"Запрашиваем котировки ценных бумаг для брокера {broker}";
+                            this.Application.StatusBar = $"Запрашиваем котировки ценных бумаг для портфеля {broker}";
                         
                         LoadBroker(broker, Tickers, BrokerPapers).GetAwaiter().GetResult();
                         
@@ -85,7 +85,7 @@ namespace Market
 
                     // заполняем поля в excel
                     if (this.Application != null)
-                        this.Application.StatusBar = $"Заполняем котировки ценных бумаг для брокера {broker} в excel";
+                        this.Application.StatusBar = $"Заполняем котировки ценных бумаг для портфеля {broker} в excel";
                     
                     for (int _count = 2; _count <= max_rows; _count++)
                     {
