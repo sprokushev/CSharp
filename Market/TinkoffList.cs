@@ -59,13 +59,16 @@ namespace Market
                     {
                         foreach (var item in Currencies.payload.instruments)
                         {
-                            _count++;
-                            ExcelListSheet.Cells[_count, ExcelList_columnTicker] = item.ticker;
-                            ExcelListSheet.Cells[_count, 2] = item.InstrumentTypeName;
-                            ExcelListSheet.Cells[_count, 3] = item.name;
-                            ExcelListSheet.Cells[_count, 4] = item.lot;
-                            ExcelListSheet.Cells[_count, 5] = item.currency;
-                            ExcelListSheet.Cells[_count, ExcelList_columnValuteCurs] = item.ValuteCurs;
+                            if (item.ticker != "")
+                            {
+                                _count++;
+                                ExcelListSheet.Cells[_count, ExcelList_columnTicker] = item.ticker;
+                                ExcelListSheet.Cells[_count, 2] = item.InstrumentTypeName;
+                                ExcelListSheet.Cells[_count, 3] = item.name;
+                                ExcelListSheet.Cells[_count, 4] = item.lot;
+                                ExcelListSheet.Cells[_count, 5] = item.currency;
+                                ExcelListSheet.Cells[_count, ExcelList_columnValuteCurs] = item.ValuteCurs;
+                            }
                         }
                     }
 
@@ -256,14 +259,16 @@ namespace Market
                     for (int _count = 2; _count <= max_rows; _count++)
                     //try
                     {
-                        ListPapers.Add(new Paper()
-                        {
-                            ticker = ExcelListSheet.Cells[_count, ExcelList_columnTicker].Text,
-                            InstrumentTypeName = ExcelListSheet.Cells[_count, 2].Text,
-                            name = ExcelListSheet.Cells[_count,3].Text,
-                            lot = ExcelListSheet.Cells[_count, 4].Value,
-                            currency = ExcelListSheet.Cells[_count, 5].Text
-                        });
+                        if (ExcelListSheet.Cells[_count, ExcelList_columnTicker].Text != "") {
+                            ListPapers.Add(new Paper()
+                            {
+                                ticker = ExcelListSheet.Cells[_count, ExcelList_columnTicker].Text,
+                                InstrumentTypeName = ExcelListSheet.Cells[_count, 2].Text,
+                                name = ExcelListSheet.Cells[_count, 3].Text,
+                                lot = ExcelListSheet.Cells[_count, 4].Value,
+                                currency = ExcelListSheet.Cells[_count, 5].Text
+                            });
+                        }
                     }
                     //catch { }
 

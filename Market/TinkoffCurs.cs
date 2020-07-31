@@ -82,6 +82,22 @@ namespace Market
                     item.currency = item.ticker;
                     item.lot = 1;
 
+                    switch (item.ticker)
+                    {
+                        case "USD": 
+                            if (_usd != 0) item.ticker=""; 
+                            break;
+                        case "EUR": 
+                            if (_eur != 0) item.ticker = ""; 
+                            break;
+                        case "RUB": 
+                            if (_rub != 0) item.ticker = ""; 
+                            break;
+                        default: 
+                            item.ticker = ""; 
+                            break;
+                    }
+
                     // заполняем цену
                     var Price = await GetAsync<OrderbookResponse>(token, $"https://api-invest.tinkoff.ru/openapi/market/orderbook?figi={item.figi}&depth=1");
                     if ((Price != null) && (Price.status == "Ok") && (Price.payload != null))
@@ -131,6 +147,28 @@ namespace Market
                 { ticker = valuteCode, name = "Рубль", currency = valuteCode, lot = 1, ValuteCurs = _rub });
                 Currencies.payload.total++;
                 Currencies.status = "Ok";
+            }
+
+            if ((Currencies != null) && (Currencies.status == "Ok") && (Currencies.payload != null) && (Currencies.payload.instruments != null))
+            {
+                bool _finish = false;
+
+                do
+                {
+                    _finish = true;
+
+                    foreach (var item in Currencies.payload.instruments)
+                    {
+                        if (item.ticker == "")
+                        {
+                            Currencies.payload.instruments.Remove(item);
+                            _finish = false;
+                            break;
+                        }
+                    }
+
+                } while (!_finish);
+
             }
 
         }

@@ -57,7 +57,7 @@ namespace Market
                 else
                     Types = null;
                 Registry.SetValue(ThisAddIn.keyName, "Types", Types);
-
+                
 
             }
             this.DialogResult = DialogResult.OK;

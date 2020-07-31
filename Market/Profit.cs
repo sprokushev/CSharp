@@ -45,7 +45,6 @@ namespace Market
                     HistorySheet.Cells[_count, 9] = "MarketPrice";
                     HistorySheet.Cells[_count, 10] = "MarketSumma";
                     HistorySheet.Cells[_count, 11] = "Curs";
-                    HistorySheet.Cells[_count, 12] = "RubSumma";
                 }
 
 
@@ -210,7 +209,7 @@ namespace Market
                     {
                         foreach (var item in Profits.Values)
                         {
-                            if (!item.IsFound)
+                            if ((!item.IsFound) && (item.Count != 0))
                             {
                                 ticker = item.ticker;
                                 count_rows++;
@@ -224,7 +223,7 @@ namespace Market
 
                     // итоги
                     count_rows++;
-                    ProfitSheet.Cells[count_rows, 4].FormulaR1C1 = $"=SUBTOTAL(9,R[{2- count_rows}]C:R[-1]C)";
+                    ProfitSheet.Cells[count_rows, 5].FormulaR1C1 = $"=SUBTOTAL(9,R[{2- count_rows}]C:R[-1]C)";
                     ProfitSheet.Cells[count_rows, 17].FormulaR1C1 = $"=SUBTOTAL(9,R[{2 - count_rows}]C:R[-1]C)";
 
                     max_columns = ProfitSheet.UsedRange.Columns.Count;
@@ -370,7 +369,6 @@ namespace Market
                             HistorySheet.Cells[_count, 9] = ProfitSheet.Cells[Row, 12];
                             HistorySheet.Cells[_count, 10] = ProfitSheet.Cells[Row, 14];
                             HistorySheet.Cells[_count, 11] = ProfitSheet.Cells[Row, 15];
-                            HistorySheet.Cells[_count, 12] = ProfitSheet.Cells[Row, 17];
                         }
                     }
                 }
