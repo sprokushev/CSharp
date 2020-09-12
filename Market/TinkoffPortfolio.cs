@@ -168,6 +168,28 @@ namespace Market
                     // портфели валют
                     var Currency = await GetAsync<CurrencyResponse>(token, $"https://api-invest.tinkoff.ru/openapi/portfolio/currencies?brokerAccountId={item.brokerAccountId}");
 
+                    if ((Currency != null) && (Currency.status == "Ok") && (Currency.payload != null) && (Currency.payload.currencies != null))
+                    {
+                        bool _finish = false;
+
+                        do
+                        {
+                            _finish = true;
+
+                            foreach (var item1 in Currency.payload.currencies)
+                            {
+                                if (item1.currency != "USD")
+                                if (item1.currency != "EUR")
+                                if (item1.currency != "RUB")
+                                {
+                                   Currency.payload.currencies.Remove(item1);
+                                   _finish = false;
+                                   break;
+                                }
+                            }
+                        } while (!_finish);
+                    }
+
                     if ((Currency != null) && (Currency.status == "Ok") && (Currency.payload != null))
                     {
                         Currency.payload.account = new UserAccount() { brokerAccountId = item.brokerAccountId, brokerAccountType = item.brokerAccountType };

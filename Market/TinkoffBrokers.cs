@@ -113,14 +113,17 @@ namespace Market
             // добавляем котировки валют
             foreach (var item in Currencies.payload.instruments)
             {
-                var orderbook = new Orderbook();
-                orderbook.faceValue = 0;
-                orderbook.lastPrice = 1;
-                orderbook.Instrument = new MarketInstrumentPosition();
-                orderbook.Instrument.currency = item.currency;
-                orderbook.Instrument.lot = 1;
-                orderbook.Instrument.ticker = item.ticker;
-                BrokerPapers.Add(item.ticker, orderbook);
+                if (item.ticker != "")
+                {
+                    var orderbook = new Orderbook();
+                    orderbook.faceValue = 0;
+                    orderbook.lastPrice = 1;
+                    orderbook.Instrument = new MarketInstrumentPosition();
+                    orderbook.Instrument.currency = item.currency;
+                    orderbook.Instrument.lot = 1;
+                    orderbook.Instrument.ticker = item.ticker;
+                    BrokerPapers.Add(item.ticker, orderbook);
+                }
             }
 
             // добавляем котировки ценных бумаг
