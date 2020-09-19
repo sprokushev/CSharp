@@ -17,14 +17,35 @@
                 <MenuItem x:Name="miSaveTaskAs" Header="Сохранить задачу как ..." ></MenuItem>
             </MenuItem>
         </Menu>
-        <TabControl Margin="0,25,0,0">
+        <TabControl x:Name="tabAlls" Margin="0,25,0,0">
             <TabItem x:Name="tabTask" Header="Задача">
                 <Grid Background="#FFE5E5E5" Margin="0,5,0,0">
                     <Label Content="Номер задачи:" HorizontalAlignment="Left" Margin="6,6,0,0" Height="26" VerticalAlignment="Top"/>
-                    <TextBox x:Name="tbTaskNumber" HorizontalAlignment="Left" Height="23" Margin="100,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="197" TextChanged="tbTaskNumber_TextChanged"/>
+                    <TextBox x:Name="tbTaskNumber" HorizontalAlignment="Left" Height="23" Margin="100,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="197" LostFocus="tbTaskNumber_LostFocus"/>
                     <Label Content="URL задачи:" HorizontalAlignment="Left" Margin="6,37,0,0" Height="26" VerticalAlignment="Top"/>
-                    <TextBox x:Name="tbTaskUrl" HorizontalAlignment="Left" Height="23" Margin="100,43,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="479"/>
+                    <TextBox x:Name="tbTaskUrl" HorizontalAlignment="Left" Height="23" Margin="100,43,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="479" TextChanged="tbTaskUrl_TextChanged"/>
                     <Button x:Name="tbGoUrl" Content="Открыть страницу" HorizontalAlignment="Left" Margin="593,43,0,0" VerticalAlignment="Top" Width="121" Click="tbGoUrl_Click"/>
+                    <Label Content="Описание задачи:" HorizontalAlignment="Left" Margin="6,63,0,0" Height="26" VerticalAlignment="Top"/>
+                    <TextBox x:Name="tbTaskDesc" HorizontalAlignment="Left" Height="85" Margin="10,85,0,0" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" VerticalAlignment="Top" Width="569" TextChanged="tbTaskDesc_TextChanged"/>
+                    <Label Content="Исполнитель:" HorizontalAlignment="Left" Margin="6,171,0,0" Height="26" VerticalAlignment="Top"/>
+                    <TextBox x:Name="tbTaskExecutor" HorizontalAlignment="Left" Height="23" Margin="100,175,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="479" TextChanged="tbTaskExecutor_TextChanged"/>
+                    <Label Content="Скрипты:" HorizontalAlignment="Left" Margin="6,200,0,0" Height="26" VerticalAlignment="Top"/>
+                    <DataGrid x:Name="dgScripts" AutoGenerateColumns="False" Margin="0,230,0,50" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False" MouseDoubleClick="dgScripts_MouseDoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn x:Name="ScriptName" Header="Название" Width="300" Binding="{Binding Path=ScriptName}" />
+                            <DataGridComboBoxColumn x:Name="ScriptTypename" Header="Тип скрипта" Width="150" 
+                                            SelectedValueBinding="{Binding ScriptType_string, Mode=TwoWay}"  
+                                            DisplayMemberPath="{Binding ScriptType_string}" />
+                            <DataGridTextColumn x:Name="ScriptFilename" Header="Имя файла" Width="600" Binding="{Binding Path=ScriptFilename}" IsReadOnly="True" />
+                        </DataGrid.Columns>
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Новый скрипт ALTER" Click="AddAlterScript_Click" />
+                                <MenuItem Header="Новый скрипт DATA" Click="AddDataScript_Click" />
+                                <MenuItem Header="Удалить скрипт из задачи" Click="DeleteScript_Click" />
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+                    </DataGrid>
                 </Grid>
             </TabItem>
             <TabItem x:Name="tabAlter" Header="Структура">
@@ -32,7 +53,7 @@
                     <TabItem x:Name="tabStructure" Header="Таблица">
                         <Grid Background="#FFE5E5E5">
                             <Label Content="Поля:" HorizontalAlignment="Left" Margin="11,0,0,0" Height="24" VerticalAlignment="Top"/>
-                            <DataGrid x:Name="dgFields" AutoGenerateColumns="False" Margin="0,20,0,280" CanUserSortColumns="True" CellEditEnding="dgFields_CellEditEnding" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
+                            <DataGrid x:Name="dgFields" AutoGenerateColumns="False" Margin="0,20,0,280" CanUserSortColumns="False" CellEditEnding="dgFields_CellEditEnding" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn x:Name="FieldOrder" Header="№" Width="40" Binding="{Binding Path=FieldOrder}" />
                                     <DataGridTextColumn x:Name="FieldName" Header="Наименование" Width="200" Binding="{Binding Path=FieldName}" />
@@ -117,6 +138,7 @@
                                 <ComboBoxItem Content="Morbus"/>
                             </ComboBox>
                             <CheckBox x:Name="isAddDrop" Content="Добавить DROP объектов" HorizontalAlignment="Left" Margin="530,0,0,9" VerticalAlignment="Bottom" Height="20" Width="189" Checked="isAddDrop_Checked" Unchecked="isAddDrop_Unchecked"/>
+                            <CheckBox x:Name="isUnicodeCreate" Content="Unicode" HorizontalAlignment="Left" Margin="707,0,0,10" VerticalAlignment="Bottom" Height="20" Width="78"/>
                             <Button x:Name="btGenerateCreate" Content="Сгенерировать скрипт" HorizontalAlignment="Left" Margin="1025,0,0,7" Width="152" RenderTransformOrigin="1.213,2.75" Height="25" VerticalAlignment="Bottom" Click="btGenerateCreate_Click"/>
                             <Label Content="Тип скрипта:" HorizontalAlignment="Left" Margin="808,0,0,8" Height="25" VerticalAlignment="Bottom" Width="84"/>
                             <ComboBox x:Name="cbScriptCreateType" HorizontalAlignment="Left" Margin="892,0,0,9" VerticalAlignment="Bottom" Width="83" SelectedIndex="0" SelectionChanged="cbScriptCreateType_SelectionChanged">
@@ -150,14 +172,16 @@
                     <TabItem x:Name="tabSQL" Header="SQL">
                         <Grid Background="#FFE5E5E5">
                             <TextBox x:Name="tbSQL" Margin="0,0,0,40" TextWrapping="Wrap" TextChanged="tbSQL_TextChanged" AcceptsReturn="True" AcceptsTab="True" ScrollViewer.CanContentScroll="True" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible"/>
-                            <Label Content="Имя таблицы:" HorizontalAlignment="Left" Margin="4,0,0,0" VerticalAlignment="Bottom" Height="35"/>
-                            <TextBox x:Name="tbTableNameSQL" HorizontalAlignment="Left" Height="22" Margin="95,0,0,10" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="317" TextChanged="tbTableNameSQL_TextChanged"/>
                             <Button x:Name="btSelectIUD" Content="Выполнить запрос" HorizontalAlignment="Left" Margin="427,0,0,10" Width="156" Click="btSelectIUD_Click" RenderTransformOrigin="1.213,2.75" Height="23" VerticalAlignment="Bottom"/>
                         </Grid>
                     </TabItem>
                     <TabItem x:Name="tabGrid" Header="Результат">
                         <Grid Background="#FFE5E5E5">
-                            <DataGrid x:Name="dgData" Margin="0,1,0,40" Grid.ColumnSpan="2" IsReadOnly="True" AutoGeneratingColumn="dgData_AutoGeneratingColumn" CanUserSortColumns="False" CanUserReorderColumns="False"/>
+                            <DataGrid x:Name="dgData" Margin="0,1,0,70" Grid.ColumnSpan="2" IsReadOnly="True" AutoGeneratingColumn="dgData_AutoGeneratingColumn" CanUserSortColumns="False" CanUserReorderColumns="False"/>
+                            <Label Content="Имя таблицы:" HorizontalAlignment="Left" Margin="4,0,0,40" VerticalAlignment="Bottom" Height="25"/>
+                            <TextBox x:Name="tbTableNameSQL" HorizontalAlignment="Left" Height="22" Margin="95,0,0,40" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="317" TextChanged="tbTableNameSQL_TextChanged"/>
+                            <Label Content="Primary Key (через запятую):" HorizontalAlignment="Left" Margin="424,0,0,40" VerticalAlignment="Bottom"/>
+                            <TextBox x:Name="tbPrimaryKey" HorizontalAlignment="Left" Height="24" Margin="600,0,0,40" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="308" SelectionChanged="tbPrimaryKey_SelectionChanged"/>
                             <Label Content="Целевая БД:" HorizontalAlignment="Left" Margin="10,0,0,10" Height="25" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
                             <ComboBox x:Name="cbScriptDB" HorizontalAlignment="Left" Margin="93,0,0,10" Width="108" SelectedIndex="0" VerticalAlignment="Bottom" SelectionChanged="cbScriptDB_SelectionChanged">
                                 <ComboBoxItem Content="Microsoft SQL"/>
@@ -171,10 +195,10 @@
                                 <ComboBoxItem Content="DELETE"/>
                             </ComboBox>
                             <CheckBox x:Name="isUpdateDT" Content="Обновить поля InsDT/UpdDT" HorizontalAlignment="Left" Margin="435,0,0,10" VerticalAlignment="Bottom" IsChecked="True" Height="20" Width="189" Unchecked="isUpdateDT_Unchecked" Checked="isUpdateDT_Checked"/>
-                            <Label Content="Primary Key (через запятую):" HorizontalAlignment="Left" Margin="629,0,0,10" VerticalAlignment="Bottom"/>
-                            <TextBox x:Name="tbPrimaryKey" HorizontalAlignment="Left" Height="24" Margin="805,0,0,10" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="309" SelectionChanged="tbPrimaryKey_SelectionChanged"/>
-                            <Button x:Name="btGenerateIUD" Content="Сгенерировать скрипт" HorizontalAlignment="Left" Margin="1128,0,0,10" Width="156" RenderTransformOrigin="1.213,2.75" Height="25" VerticalAlignment="Bottom" Click="btGenerateIUD_Click"/>
-                            <Label x:Name="lbCount" Content="Строк:" HorizontalAlignment="Left" Margin="1291,0,0,10" Height="25" VerticalAlignment="Bottom"/>
+                            <CheckBox x:Name="isUnicodeIUD" Content="Unicode" HorizontalAlignment="Left" Margin="635,0,0,10" VerticalAlignment="Bottom" Height="20" Width="78" />
+                            <Button x:Name="btGenerateIUD" Content="Сгенерировать скрипт" HorizontalAlignment="Left" Margin="853,0,0,10" Width="145" RenderTransformOrigin="1.213,2.75" Height="25" VerticalAlignment="Bottom" Click="btGenerateIUD_Click"/>
+                            <Button x:Name="btGenerateIUDFile" Content="Сгенерировать скрипт в файл" HorizontalAlignment="Left" Margin="1018,0,0,10" Width="188" RenderTransformOrigin="1.213,2.75" Height="25" VerticalAlignment="Bottom" Click="btGenerateIUDFile_Click" />
+                            <Label x:Name="lbCount" Content="Строк:" HorizontalAlignment="Left" Margin="1390,0,0,10" Height="25" VerticalAlignment="Bottom"/>
                         </Grid>
                     </TabItem>
                     <TabItem x:Name="tabScriptIUD" Header="Script">

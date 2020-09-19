@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace SQLGen
@@ -12,6 +13,9 @@ namespace SQLGen
 
     public class TableDB
     {
+        // номер задачи
+        public string TaskNumber { get; set; }
+
         // целевая БД
         TargetDBType _targetdb;
         public TargetDBType TargetDB
@@ -28,8 +32,41 @@ namespace SQLGen
             }
         }
 
+        public string TargetDBTypeToFilename 
+        { 
+            get 
+            {
+                switch (this.TargetDB)
+                {
+                    case TargetDBType.PGSQL:
+                    case TargetDBType.PGSQL_LIQUIBASE:
+                        return "PGSQL";
+                    case TargetDBType.MSSQL:
+                    case TargetDBType.MSSQL_LIQUIBASE:
+                    case TargetDBType.None:
+                    default:
+                        return "MSSQL";
+                }
+            }
+        }
+
+
         // Тип скрипта
         public ScriptType ScriptType { get; set; }
+        public string ScriptTypeToFilename
+        {
+            get
+            {
+                switch (this.ScriptType)
+                {
+                    case ScriptType.ALTER:
+                        return "alter";
+                    case ScriptType.CREATE:
+                    default:
+                        return "create";
+                }
+            }
+        }
 
         // Тип таблицы
         public TableType TableType { get; set; }
@@ -46,12 +83,52 @@ namespace SQLGen
         // текст итогового SQL-скрипта
         public string SQLScript { get; set; }
 
+        // имя файла со скриптом
+        string _filename;
+        public string ScriptFilename 
+        {
+            get
+            {
+                if ((_filename == null) || (_filename == ""))
+                {
+                    string s = this.TargetDBTypeToFilename + " " + this.TaskNumber;
+                    if (this.TableEdit.TableName != "") s = s + " " + this.TableEdit.TableName;
+                    s = s + " " + this.ScriptTypeToFilename + ".sql";
+                    return s;
+                }
+                else return _filename.Trim();
+            }
+            set
+            {
+                _filename = value.Trim();
+            }
+        }
+
 
         public TableDB()
         {
-            this.TargetDB = TargetDBType.None;
+            this.TargetDB = TargetDBType.MSSQL;
+            this.ScriptType = ScriptType.CREATE;
+            this.TableType = TableType.DICT;
+            this.isAddDrop = false;
             TableOrig = new TableInfo(this.TargetDB);
             TableEdit = new TableInfo(this.TargetDB);
+        }
+
+        public void Fill (TableDB _table)
+        {
+            if (_table != null)
+            {
+                this.TaskNumber = _table.TaskNumber;
+                this.TargetDB = _table.TargetDB;
+                this.ScriptType = _table.ScriptType;
+                this.TableType = _table.TableType;
+                this.TableOrig.Fill(_table.TableOrig);
+                this.TableEdit.Fill(_table.TableEdit);
+                this.isAddDrop = _table.isAddDrop;
+                this.SQLScript = _table.SQLScript;
+                this.ScriptFilename = _table.ScriptFilename;
+            }
         }
 
         public string RenameTableToScript()
@@ -208,7 +285,8 @@ GO";
             foreach (RowDB row in this.TableEdit.ListField.OrderBy(x => x.FieldOrder).Where(x => ( (x.FieldName != "") && (x.FieldType != "") )))
             {
 
-                RowDB oldRow = TableOrig.FindFieldById(row.FieldId);
+                // находим поле в оригинальной таблице
+                RowDB oldRow = TableOrig.FindFieldByName(row.FieldName);
 
                 if (this.ScriptType == ScriptType.ALTER)
                 {
@@ -313,7 +391,7 @@ GO";
             if (this.ScriptType == ScriptType.ALTER)
             foreach (RowDB oldRow in this.TableOrig.ListField.OrderBy(x => x.FieldOrder).Where(x => (x.FieldName != "")))
             {
-                RowDB row = this.TableEdit.FindFieldById(oldRow.FieldId);
+                RowDB row = this.TableEdit.FindFieldByName(oldRow.FieldName);
 
                 if (row == null)
                 {
@@ -565,6 +643,27 @@ GO";
         // список индексов
         //public List<IndexDB> ListIndex { get; set; }
 
+
+        public void Fill(TableInfo _table)
+        {
+            if (_table != null)
+            {
+                this.TargetDB = _table.TargetDB;
+                this.SchemaName = _table.SchemaName;
+                this.TableName = _table.TableName;
+                this.TableDesc = _table.TableDesc;
+                this.PKName = _table.PKName;
+
+                if (_table.ListField != null)
+                {
+                    foreach (var item in _table.ListField) this.AddField(item.FieldOrder_string, item.FieldName, item.FieldType, item.FieldSize, item.FieldDec,
+                        item.FieldDesc, item.IsNotNull_string, item.IsIdentity_string, item.IsPK_string, item.FieldDefault, item.FKName, item.FKTable,
+                        item.FKField);
+                }
+            }
+        }
+
+
         // скрипт на переименование таблицы
         public void RenameTable (string newName)
         {
@@ -605,10 +704,10 @@ GO";
         }
 
         // Найти поле по Id
-        public RowDB FindFieldById(int Id)
+/*        public RowDB FindFieldById(int Id)
         {
             return this.ListField.Find(x => x.FieldId == Id);
-        }
+        }*/
 
         // Добавить поле в список
         public void AddField(string FieldOrder, string FieldName, string FieldType, string FieldSize="", string FieldDec="", string FieldDesc="", 
@@ -621,16 +720,15 @@ GO";
             if (IsIdentity == "") IsIdentity = "false";
             if (IsPK == "") IsPK = "false";
 
-            newField.FieldOrder = int.Parse(FieldOrder);
-            newField.FieldId = int.Parse(FieldOrder);
+            newField.FieldOrder_string = FieldOrder;
             newField.FieldName = FieldName;
             newField.FieldDesc = FieldDesc;
             newField.FieldType = FieldType.ToUpper();
             newField.FieldSize = FieldSize;
             newField.FieldDec = FieldDec;
-            newField.IsNotNull = bool.Parse(IsNotNull);
-            newField.IsIdentity = bool.Parse(IsIdentity);
-            newField.IsPK = bool.Parse(IsPK);
+            newField.IsNotNull_string = IsNotNull;
+            newField.IsIdentity_string = IsIdentity;
+            newField.IsPK_string = IsPK;
             newField.FieldDefault = FieldDefault;
             newField.FKName = FKName;
             newField.FKTable = FKTable;
@@ -780,7 +878,7 @@ GO";
                     break;
                 case TargetDBType.PGSQL:
                 case TargetDBType.PGSQL_LIQUIBASE:
-                    ScriptRow = "ALTER TABLE " + this.FullTableNameToScript + " ADD COLUMN " + row.FieldNameToScript + " " + row.FullFieldTypeToScript + ";";
+                    ScriptRow = "ALTER TABLE " + this.FullTableNameToScript + " ADD COLUMN " + row.FieldNameToScript + " " + row.FullFieldTypeToScript;
                     if (row.IsIdentity == true) ScriptRow = ScriptRow + " " + row.IsIdentityToScript;
                     if (row.IsNotNull == true) ScriptRow = ScriptRow + " " + row.IsNotNullToScript;
                     if (row.FieldDefault != "") ScriptRow = ScriptRow + " " + row.FieldDefaultToScript;
@@ -1207,7 +1305,6 @@ GO";
         {
             this.TargetDB = field.TargetDB;
             this.FieldOrder = field.FieldOrder;
-            this.FieldId = field.FieldId;
             this.FieldName = field.FieldName;
             this.FieldDesc = field.FieldDesc;
             this.FieldType = field.FieldType;
@@ -1223,8 +1320,23 @@ GO";
         }
 
 
-        public int FieldOrder { get; set; }  // Порядок
-        public int FieldId { get; set; }  // ключ для связки полей
+        // Порядок
+        int _order;
+        public int FieldOrder  
+        {
+            get { return _order; }
+            set { _order = value; }
+        }
+
+        [JsonIgnore]
+        public string FieldOrder_string
+        {
+            get { return _order.ToString();  }
+            set { if (!int.TryParse(value, out _order) ) _order = 0; }
+        }
+
+        // ключ для связки полей
+        //public int FieldId { get; set; }  
 
         // Имя поля
         string _field_name;
@@ -1513,7 +1625,23 @@ GO";
 
 
         // NOT NULL
-        public bool IsNotNull { get; set; } 
+        bool _isnotnull;
+        public bool IsNotNull 
+        {
+            get { return _isnotnull; }
+            set { _isnotnull = value; }
+        }
+
+        [JsonIgnore]
+        public string IsNotNull_string
+        {
+            get { if (_isnotnull == true) return "true"; else return "false";  }
+            set 
+            {
+                if ((value == null) || (value.Trim().ToLower() == "") || (value.Trim().ToLower() != "true")) _isnotnull = false;
+                else _isnotnull = true;
+            }
+        }
 
         public string IsNotNullToScript
         {
@@ -1534,7 +1662,24 @@ GO";
         }
 
         // identity
-        public bool IsIdentity { get; set; } 
+        bool _isidentity;
+        public bool IsIdentity 
+        {
+            get { return _isidentity; }
+            set { _isidentity = value; }
+        }
+
+        [JsonIgnore]
+        public string IsIdentity_string
+        {
+            get { if (_isidentity == true) return "true"; else return "false"; }
+            set
+            {
+                if ( (value == null) || (value.Trim().ToLower() == "") || (value.Trim().ToLower() != "true") ) _isidentity = false;
+                else _isidentity = true;
+            }
+        }
+
         public string IsIdentityToScript
         {
             get
@@ -1556,7 +1701,24 @@ GO";
         }
 
         // primary key
-        public bool IsPK { get; set; }
+        bool _ispk;
+        public bool IsPK
+        {
+            get { return _ispk; }
+            set { _ispk = value; }
+        }
+
+        [JsonIgnore]
+        public string IsPK_string
+        {
+            get { if (_ispk == true) return "true"; else return "false"; }
+            set
+            {
+                if ((value == null) || (value.Trim().ToLower() == "") || (value.Trim().ToLower() != "true")) _ispk = false;
+                else _ispk = true;
+            }
+        }
+
         public string IsPKToScript
         {
             get

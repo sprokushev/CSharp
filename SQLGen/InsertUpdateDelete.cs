@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows;
 
 namespace SQLGen
 {
@@ -21,56 +22,83 @@ namespace SQLGen
 
         public void SetQuery (QueryDB _query)
         {
-            tbTableNameSQL.Text = _query.TableName;
-            
-            tbSQL.Text = _query.SQLQuery;
-            
-            switch (_query.TargetDB)
+
+            if (Query == null) Query = new QueryDB();
+
+            // по умолчанию
+            tbTableNameSQL.Text = "";
+            tbSQL.Text = "";
+            cbScriptDB.SelectedIndex = 0;
+            cbScriptType.SelectedIndex = 0;
+            tbPrimaryKey.Text = "";
+            tbScriptIUD.Text = "";
+            isUpdateDT.IsChecked = false;
+            tabData.Header = Query.ScriptFilename;
+
+
+            // новые значения
+            if (_query != null)
             {
-                case TargetDBType.MSSQL:
-                    cbScriptDB.SelectedIndex = 0;
-                    break;
-                case TargetDBType.PGSQL:
-                    cbScriptDB.SelectedIndex = 1;
-                    break;
-                case TargetDBType.MSSQL_LIQUIBASE:
-                    cbScriptDB.SelectedIndex = 2;
-                    break;
-                case TargetDBType.PGSQL_LIQUIBASE:
-                    cbScriptDB.SelectedIndex = 3;
-                    break;
-                case TargetDBType.None:
-                default:
-                    break;
+
+                Query.Fill(_query);
+
+
+                tbTableNameSQL.Text = _query.TableName;
+                tbSQL.Text = _query.SQLQuery;
+                tbPrimaryKey.Text = _query.PrimaryKey;
+                tbScriptIUD.Text = _query.SQLScript;
+                if (_query.IsUpdateDT == true) isUpdateDT.IsChecked = true; else isUpdateDT.IsChecked = false;
+
+                switch (_query.TargetDB)
+                {
+                    case TargetDBType.MSSQL:
+                        cbScriptDB.SelectedIndex = 0;
+                        break;
+                    case TargetDBType.PGSQL:
+                        cbScriptDB.SelectedIndex = 1;
+                        break;
+                    case TargetDBType.MSSQL_LIQUIBASE:
+                        cbScriptDB.SelectedIndex = 2;
+                        break;
+                    case TargetDBType.PGSQL_LIQUIBASE:
+                        cbScriptDB.SelectedIndex = 3;
+                        break;
+                    case TargetDBType.None:
+                    default:
+                        break;
+                }
+
+                switch (_query.ScriptType)
+                {
+                    case ScriptType.INSERT:
+                        cbScriptType.SelectedIndex = 0;
+                        break;
+                    case ScriptType.INSERT_UPDATE:
+                        cbScriptType.SelectedIndex = 1;
+                        break;
+                    case ScriptType.UPDATE:
+                        cbScriptType.SelectedIndex = 2;
+                        break;
+                    case ScriptType.DELETE:
+                        cbScriptType.SelectedIndex = 3;
+                        break;
+                    case ScriptType.ALTER:
+                    case ScriptType.CREATE:
+                    default:
+                        break;
+                }
+
+                tabData.Header = Query.ScriptFilename;
             }
-
-            switch (_query.ScriptType)
-            {
-                case ScriptType.INSERT:
-                    cbScriptType.SelectedIndex = 0;
-                    break;
-                case ScriptType.INSERT_UPDATE:
-                    cbScriptType.SelectedIndex = 1;
-                    break;
-                case ScriptType.UPDATE:
-                    cbScriptType.SelectedIndex = 2;
-                    break;
-                case ScriptType.DELETE:
-                    cbScriptType.SelectedIndex = 3;
-                    break;
-                case ScriptType.ALTER:
-                case ScriptType.CREATE:
-                default:
-                    break;
-            }
-
-            tbPrimaryKey.Text = _query.PrimaryKey;
-
-            tbScriptIUD.Text = _query.SQLScript;
-
-            if (_query.IsUpdateDT == true) isUpdateDT.IsChecked = true; else isUpdateDT.IsChecked = false;
 
             Query.DataTable = new DataTable();
+            dgData.ItemsSource = null;
+
+            tabData.Visibility = Visibility.Visible;
+            tabAlter.Visibility = Visibility.Collapsed;
+            tabData.Focus();
+            tabSQL.Focus();
+            tbSQL.Focus();
         }
 
 
@@ -158,27 +186,84 @@ namespace SQLGen
             Cursor oldCursor = this.Cursor;
 
             if ((Connect.IsConnected != ConnType.None) && (tbTableNameSQL.Text.Trim() != ""))
+            {
+                if ((tbPrimaryKey.Text.Trim() == "") && (cbScriptType.SelectedIndex != 0))
+                {
+                    tbPrimaryKey.Focus();
+                    throw new ArgumentException($"Необходимо заполнить Primary Key (через запятую) !");
+                }
+
                 try
                 {
-                    if ((tbPrimaryKey.Text.Trim() == "") && (cbScriptType.SelectedIndex != 0))
-                    {
-                        tbPrimaryKey.Focus();
-                        throw new ArgumentException($"Необходимо заполнить Primary Key (через запятую) !");
-                    }
-
                     this.Cursor = Cursors.Wait;
                     tbScriptIUD.Clear();
-                    tbScriptIUD.Text = Query.GenerateScript();
+                    string script = "";
+                    Query.GenerateScript(null, out script);
+                    tbScriptIUD.Text = script;
                     tabScriptIUD.IsSelected = true;
+                    tabData.Header = Query.ScriptFilename;
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message);
                 }
-
+            }
             this.Cursor = oldCursor;
         }
 
+
+        private void btGenerateIUDFile_Click(object sender, RoutedEventArgs e)
+        {
+            if ((Connect.IsConnected != ConnType.None) && (tbTableNameSQL.Text.Trim() != ""))
+            {
+
+                if ((tbPrimaryKey.Text.Trim() == "") && (cbScriptType.SelectedIndex != 0))
+                {
+                    tbPrimaryKey.Focus();
+                    throw new ArgumentException($"Необходимо заполнить Primary Key (через запятую) !");
+                }
+
+                FileStream fs = null;
+                Cursor oldCursor = this.Cursor;
+                Encoding encoding = Encoding.GetEncoding(1251);
+                if (isUnicodeIUD.IsChecked == true) encoding = Encoding.UTF8;
+
+                try
+                {
+                    Query.ScriptFilename = SaveFileDialog (Query.ScriptFilename, out fs);
+                    tabData.Header = Query.ScriptFilename;
+                    using (StreamWriter file = new StreamWriter(fs, encoding))
+                    {
+
+                                try
+                                {
+                                    this.Cursor = Cursors.Wait;
+                                    string script = "";
+                                    Query.GenerateScript(file, out script);
+
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show(ex.Message);
+                                }
+
+                    }
+                    if (CurrentScript != null)
+                    {
+                        CurrentScript.ScriptFilename = Query.ScriptFilename;
+                        CurrentScript.Query.Fill(Query);
+                        tabTask.Focus();
+                        dgScripts.Focus();
+                    }
+
+                }
+                finally
+                {
+                    if (fs != null) fs.Dispose();
+                }
+                this.Cursor = oldCursor;
+            }
+        }
 
         private void dgData_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
         {
@@ -192,7 +277,7 @@ namespace SQLGen
 
         private void tbSQL_TextChanged(object sender, TextChangedEventArgs e)
         {
-            var s_orig = tbSQL.Text.Replace(System.Environment.NewLine, " ");
+            var s_orig = tbSQL.Text.Replace(System.Environment.NewLine, " ").Replace("  "," ").Replace("  ", " ").Replace("  ", " ").Replace("  ", " ");
             var s_lower = s_orig.ToLower();
             var arr = s_orig.Split(' ');
             var pos = Array.IndexOf(s_lower.Split(' '), "from");
@@ -207,29 +292,60 @@ namespace SQLGen
 
         private void btSaveIUD_Click(object sender, RoutedEventArgs e)
         {
-            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-            dlg.FileName = ""; // Default file name
-            dlg.DefaultExt = ".sql"; // Default file extension
-            dlg.Filter = "(*.sql)|*.sql|Все файлы (*.*)|*.*"; // Filter files by extension
 
-            // Show save file dialog box
-            Nullable<bool> result = dlg.ShowDialog();
+            FileStream fs = null;
+            Cursor oldCursor = this.Cursor;
+            Encoding encoding = Encoding.GetEncoding(1251);
+            if (isUnicodeIUD.IsChecked == true) encoding = Encoding.UTF8;
 
-            // Process save file dialog box results
-            if (result == true)
+            try
             {
-                // Save document
-                string filename = dlg.FileName;
-                using (System.IO.StreamWriter file = new System.IO.StreamWriter(filename, false))
+                Query.ScriptFilename = SaveFileDialog(Query.ScriptFilename, out fs);
+                tabData.Header = Query.ScriptFilename;
+                using (StreamWriter file = new StreamWriter(fs, encoding))
                 {
-                    file.WriteLine(tbScriptIUD.Text);
+
+                    try
+                    {
+                        this.Cursor = Cursors.Wait;
+                        string script = "";
+                        Query.GenerateScript(null, out script);
+                        tbScriptIUD.Text = script;
+                        file.WriteLine(tbScriptIUD.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
+
                 }
+                if (CurrentScript != null)
+                {
+                    CurrentScript.ScriptFilename = Query.ScriptFilename;
+                    CurrentScript.Query.Fill(Query);
+                    tabTask.Focus();
+                    dgScripts.Focus();
+                }
+
             }
+            finally
+            {
+                if (fs != null) fs.Dispose();
+            }
+            this.Cursor = oldCursor;
+
         }
 
         private void btClipboardIUD_Click(object sender, RoutedEventArgs e)
         {
             Clipboard.SetText(tbScriptIUD.Text);
+            if (CurrentScript != null)
+            {
+                CurrentScript.ScriptFilename = Query.ScriptFilename;
+                CurrentScript.Query.Fill(Query);
+                tabTask.Focus();
+                dgScripts.Focus();
+            }
         }
 
 

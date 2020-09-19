@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -51,74 +52,109 @@ namespace SQLGen
 
         public void SetTable(TableDB _table)
         {
-            tbSchemaName.Text = _table.TableEdit.SchemaName;
-            tbTableName.Text = _table.TableEdit.TableName;
-            tbPKName.Text = _table.TableEdit.PKName;
-            tbTableDesc.Text = _table.TableEdit.TableDesc;
 
-            switch (_table.TargetDB)
+            if (Table == null) Table = new TableDB();
+
+            // по умолчанию
+            tbSchemaName.Text = "";
+            tbTableName.Text = "";
+            tbPKName.Text = "";
+            tbTableDesc.Text = "";
+            cbScriptCreateDB.SelectedIndex = 0;
+            cbTableType.SelectedIndex = 0;
+            isAddDrop.IsChecked = false;
+            cbScriptCreateType.SelectedIndex = 0;
+            tbScriptCreate.Text = "";
+            tabAlter.Header = Table.ScriptFilename;
+
+            Table.TableOrig.ListField.Clear();
+            Table.TableEdit.ListField.Clear();
+            tbTableName.IsReadOnly = false;
+            tbSchemaName.IsReadOnly = false;
+
+
+            // новые значения
+            if (_table != null)
             {
-                case TargetDBType.PGSQL:
-                    cbScriptCreateDB.SelectedIndex = 1;
-                    break;
-                case TargetDBType.MSSQL_LIQUIBASE:
-                    cbScriptCreateDB.SelectedIndex = 2;
-                    break;
-                case TargetDBType.PGSQL_LIQUIBASE:
-                    cbScriptCreateDB.SelectedIndex = 3;
-                    break;
-                case TargetDBType.MSSQL:
-                case TargetDBType.None:
-                default:
-                    cbScriptCreateDB.SelectedIndex = 0;
-                    break;
+                Table.Fill(_table);
+
+                tbSchemaName.Text = _table.TableEdit.SchemaName;
+                tbTableName.Text = _table.TableEdit.TableName;
+                tbPKName.Text = _table.TableEdit.PKName;
+                tbTableDesc.Text = _table.TableEdit.TableDesc;
+
+                switch (_table.TargetDB)
+                {
+                    case TargetDBType.PGSQL:
+                        cbScriptCreateDB.SelectedIndex = 1;
+                        break;
+                    case TargetDBType.MSSQL_LIQUIBASE:
+                        cbScriptCreateDB.SelectedIndex = 2;
+                        break;
+                    case TargetDBType.PGSQL_LIQUIBASE:
+                        cbScriptCreateDB.SelectedIndex = 3;
+                        break;
+                    case TargetDBType.MSSQL:
+                    case TargetDBType.None:
+                    default:
+                        cbScriptCreateDB.SelectedIndex = 0;
+                        break;
+                }
+
+                switch (_table.TableType)
+                {
+                    case TableType.EVN:
+                        cbTableType.SelectedIndex = 1;
+                        break;
+                    case TableType.PERSONEVN:
+                        cbTableType.SelectedIndex = 2;
+                        break;
+                    case TableType.MORBUS:
+                        cbTableType.SelectedIndex = 3;
+                        break;
+                    case TableType.DICT:
+                    default:
+                        cbTableType.SelectedIndex = 0;
+                        break;
+                }
+
+                if (_table.isAddDrop == true) isAddDrop.IsChecked = true; else isAddDrop.IsChecked = false;
+
+                switch (_table.ScriptType)
+                {
+                    case ScriptType.INSERT_UPDATE:
+                        cbScriptCreateType.SelectedIndex = 1;
+                        break;
+                    case ScriptType.UPDATE:
+                        cbScriptCreateType.SelectedIndex = 2;
+                        break;
+                    case ScriptType.DELETE:
+                        cbScriptCreateType.SelectedIndex = 3;
+                        break;
+                    case ScriptType.INSERT:
+                    case ScriptType.ALTER:
+                    case ScriptType.CREATE:
+                    default:
+                        cbScriptCreateType.SelectedIndex = 0;
+                        break;
+                }
+
+                tbScriptCreate.Text = _table.SQLScript;
+                tabAlter.Header = Table.ScriptFilename;
+
             }
 
-            switch (_table.TableType)
-            {
-                case TableType.EVN:
-                    cbScriptCreateDB.SelectedIndex = 1;
-                    break;
-                case TableType.PERSONEVN:
-                    cbScriptCreateDB.SelectedIndex = 2;
-                    break;
-                case TableType.MORBUS:
-                    cbScriptCreateDB.SelectedIndex = 3;
-                    break;
-                case TableType.DICT:
-                default:
-                    cbScriptCreateDB.SelectedIndex = 0;
-                    break;
-            }
+            FieldType.ItemsSource = ListTypes;
+            dgFields.ItemsSource = Table.TableEdit.ListField;
 
-            if (_table.isAddDrop == true) isAddDrop.IsChecked = true; else isAddDrop.IsChecked = false;
-
-            switch (_table.ScriptType)
-            {
-                case ScriptType.INSERT_UPDATE:
-                    cbScriptCreateType.SelectedIndex = 1;
-                    break;
-                case ScriptType.UPDATE:
-                    cbScriptCreateType.SelectedIndex = 2;
-                    break;
-                case ScriptType.DELETE:
-                    cbScriptCreateType.SelectedIndex = 3;
-                    break;
-                case ScriptType.INSERT:
-                case ScriptType.ALTER:
-                case ScriptType.CREATE:
-                default:
-                    cbScriptCreateType.SelectedIndex = 0;
-                    break;
-            }
-
-            tbScriptCreate.Text = _table.SQLScript;
-
-            Query.DataTable = new DataTable();
-
+            tabData.Visibility = Visibility.Collapsed;
+            tabAlter.Visibility = Visibility.Visible;
+            tabAlter.Focus();
+            tabStructure.Focus();
+            dgFieldsRefresh();
+            tbTableName.Focus();
 
         }
-
 
         private void btLockSessions_Click(object sender, RoutedEventArgs e)
         {
@@ -194,10 +230,7 @@ ORDER BY schema_name, definition";
                 MessageBox.Show(ex.Message);
             }
         }
-
-
-
-
+              
         private void btDependOn_Click(object sender, RoutedEventArgs e)
         {
             // Кто зависит от таблицы
@@ -354,7 +387,6 @@ ORDER BY alterobjectlog_insdt desc limit 10";
                 MessageBox.Show(ex.Message);
             }
         }
-
    
         private void dgDopInfo_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
         {
@@ -366,33 +398,46 @@ ORDER BY alterobjectlog_insdt desc limit 10";
 
         private void btSaveCreate_Click(object sender, RoutedEventArgs e)
         {
-            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-            dlg.FileName = ""; // Default file name
-            dlg.DefaultExt = ".sql"; // Default file extension
-            dlg.Filter = "(*.sql)|*.sql|Все файлы (*.*)|*.*"; // Filter files by extension
 
-            // Show save file dialog box
-            Nullable<bool> result = dlg.ShowDialog();
+            FileStream fs = null;
+            Encoding encoding = Encoding.GetEncoding(1251);
+            if (isUnicodeCreate.IsChecked == true) encoding = Encoding.UTF8;
 
-            // Process save file dialog box results
-            if (result == true)
+            try
             {
-                // Save document
-                string filename = dlg.FileName;
-                using (System.IO.StreamWriter file = new System.IO.StreamWriter(filename, false))
+                Table.ScriptFilename = SaveFileDialog(Table.ScriptFilename, out fs);
+                tabAlter.Header = Table.ScriptFilename;
+                using (StreamWriter file = new StreamWriter(fs, encoding))
                 {
                     file.WriteLine(tbScriptCreate.Text);
                 }
+                if (CurrentScript != null)
+                {
+                    CurrentScript.ScriptFilename = Table.ScriptFilename;
+                    CurrentScript.Table.Fill(Table);
+                    tabTask.Focus();
+                    dgScripts.Focus();
+                }
+            }
+            finally
+            {
+                if (fs != null) fs.Dispose();
             }
         }
 
         private void btClipboardCreate_Click(object sender, RoutedEventArgs e)
         {
             Clipboard.SetText(tbScriptCreate.Text);
+            if (CurrentScript != null)
+            {
+                CurrentScript.ScriptFilename = Table.ScriptFilename;
+                CurrentScript.Table.Fill(Table);
+                tabTask.Focus();
+                dgScripts.Focus();
+            }
         }
 
-
-        private void GridRefresh()
+        private void dgFieldsRefresh()
         {
             ListCollectionView cvTasks = (ListCollectionView)CollectionViewSource.GetDefaultView(dgFields.ItemsSource);
 
@@ -407,7 +452,6 @@ ORDER BY alterobjectlog_insdt desc limit 10";
 
             dgFields.Items.Refresh();
         }
-
 
         private void tbTableName_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -487,14 +531,13 @@ ORDER BY alterobjectlog_insdt desc limit 10";
 
             dlg1.Dispose();
 
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
         private void btAutoPKName_Click(object sender, RoutedEventArgs e)
         {
             tbPKName.Text = "pk_" + Table.TableEdit.TableName + "_id";
         }
-
 
         private void DeleteField_Click(object sender, RoutedEventArgs e)
         {
@@ -503,7 +546,7 @@ ORDER BY alterobjectlog_insdt desc limit 10";
             {
                 RowDB field = dgFields.SelectedItem as RowDB;
                 Table.TableEdit.ListField.Remove(field);
-                GridRefresh();
+                dgFieldsRefresh();
 
             }
         }
@@ -511,7 +554,7 @@ ORDER BY alterobjectlog_insdt desc limit 10";
         private void AddField_Click(object sender, RoutedEventArgs e)
         {
             Table.TableEdit.AddField("", Table.TableEdit.TableName+"_", "BIGINT");
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
         private void btClearFields_Click(object sender, RoutedEventArgs e)
@@ -519,6 +562,7 @@ ORDER BY alterobjectlog_insdt desc limit 10";
 
             FieldType.ItemsSource = ListTypes;
 
+            Table.TableOrig.ListField.Clear();
             Table.TableEdit.ListField.Clear();
 
             dgFields.ItemsSource = Table.TableEdit.ListField;
@@ -527,7 +571,7 @@ ORDER BY alterobjectlog_insdt desc limit 10";
             tbTableName.IsReadOnly = false;
             tbSchemaName.IsReadOnly = false;
 
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
 
@@ -564,7 +608,7 @@ ORDER BY alterobjectlog_insdt desc limit 10";
             Table.TableEdit.AddField("", Table.TableEdit.TableName + "_id", "BIGINT", "", "", "Уникальный идентификатор", "true", "true", "true");
             Table.TableEdit.AddField("", Table.TableEdit.TableName + "_Code", "BIGINT", "", "", "Код");
             Table.TableEdit.AddField("", Table.TableEdit.TableName + "_Name", "VARCHAR", "100", "", "Наименование");
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
         private void AddFieldInsUpdID_Click(object sender, RoutedEventArgs e)
@@ -574,21 +618,21 @@ ORDER BY alterobjectlog_insdt desc limit 10";
             Table.TableEdit.AddField("", "pmUser_updID", "BIGINT", "", "", "Кто редактировал запись", "true");
             Table.TableEdit.AddField("", Table.TableEdit.TableName + "_insDT", "DATETIME", "", "", "Дата создания", "true");
             Table.TableEdit.AddField("", Table.TableEdit.TableName + "_updDT", "DATETIME", "", "", "Дата редактирования", "true");
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
         private void AddFieldSysNick_Click(object sender, RoutedEventArgs e)
         {
             // добавляю SysNick
             Table.TableEdit.AddField("", Table.TableEdit.TableName + "_SysNick", "VARCHAR", "20", "", "Системное наименование");
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
         private void AddFieldDescr_Click(object sender, RoutedEventArgs e)
         {
             // добавляю Descr
             Table.TableEdit.AddField("", Table.TableEdit.TableName + "_Descr", "VARCHAR", "200", "", "Описание");
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
         private void AddFieldBegEndDate_Click(object sender, RoutedEventArgs e)
@@ -596,7 +640,7 @@ ORDER BY alterobjectlog_insdt desc limit 10";
             // добавляю Период действия (begDate, endDate)
             Table.TableEdit.AddField("0", Table.TableEdit.TableName + "_begDate", "DATETIME", "", "", "Дата начала действия");
             Table.TableEdit.AddField("0", Table.TableEdit.TableName + "_endDate", "DATETIME", "", "", "Дата окончания действия");
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
         private void AddFieldBegEndDT_Click(object sender, RoutedEventArgs e)
@@ -604,21 +648,21 @@ ORDER BY alterobjectlog_insdt desc limit 10";
             // добавляю Период действия (begDate, endDate)
             Table.TableEdit.AddField("0", Table.TableEdit.TableName + "_begDT", "DATETIME", "", "", "Дата начала действия");
             Table.TableEdit.AddField("0", Table.TableEdit.TableName + "_endDT", "DATETIME", "", "", "Дата окончания действия");
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
         private void AddFieldSetDate_Click(object sender, RoutedEventArgs e)
         {
             // добавляю Дата (setDate)
             Table.TableEdit.AddField("", Table.TableEdit.TableName + "_setDate", "DATETIME", "", "", "Дата документа");
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
         private void AddFieldSetDT_Click(object sender, RoutedEventArgs e)
         {
             // добавляю Дата (setDT)
             Table.TableEdit.AddField("", Table.TableEdit.TableName + "_setDT", "DATETIME", "", "", "Дата документа");
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
         private void AddFieldDelID_Click(object sender, RoutedEventArgs e)
@@ -627,21 +671,21 @@ ORDER BY alterobjectlog_insdt desc limit 10";
             Table.TableEdit.AddField("", Table.TableEdit.TableName + "_deleted", "BIGINT", "", "", "Признак удаления", "false", "false", "false", "1", "fk_" + Table.TableEdit.TableName + "_deleted", "dbo.YesNo", "YesNo_id");
             Table.TableEdit.AddField("", "pmUser_delID", "BIGINT", "", "", "Пользователь, удаливший запись");
             Table.TableEdit.AddField("", Table.TableEdit.TableName + "_delDT", "DATETIME", "", "", "Дата удаления");
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
         private void AddFieldIs_Click(object sender, RoutedEventArgs e)
         {
             // добавляю Да/Нет (Is)
             Table.TableEdit.AddField("", Table.TableEdit.TableName + "_Is", "BIGINT", "", "", "", "false", "false", "false", "", "", "dbo.YesNo", "YesNo_id");
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
         private void AddFieldRegion_Click(object sender, RoutedEventArgs e)
         {
             // добавляю Регион (Region_id)
             Table.TableEdit.AddField("", "Region_id", "BIGINT", "", "", "Идентификатор региона", "false", "false", "false", "", "fk_" + Table.TableEdit.TableName + "_Region_id", "dbo.KLArea", "KLArea_id");
-            GridRefresh();
+            dgFieldsRefresh();
         }
 
 
@@ -821,7 +865,7 @@ order by c.ordinal_position";
 
                             dgFields.ItemsSource = Table.TableEdit.ListField;
 
-                            GridRefresh();
+                            dgFieldsRefresh();
                         }
                     }
 
@@ -896,7 +940,7 @@ where lower(t.schema_name + '.' + t.table_name) = '" + Table.TableOrig.FullTable
                     tbScriptCreate.Clear();
                     tbScriptCreate.Text = Table.GenerateScript();
                     tabScriptCreate.IsSelected = true;
-
+                    tabAlter.Header = Table.ScriptFilename;
                 }
                 catch (Exception ex)
                 {

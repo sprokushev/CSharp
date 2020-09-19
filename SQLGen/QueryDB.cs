@@ -10,15 +10,57 @@ namespace SQLGen
 {
     public class QueryDB
     {
+        // номер задачи
+        public string TaskNumber { get; set; }
+
         // целевая БД
         public TargetDBType TargetDB { get; set; }
+        public string TargetDBTypeToFilename
+        {
+            get
+            {
+                switch (this.TargetDB)
+                {
+                    case TargetDBType.PGSQL:
+                    case TargetDBType.PGSQL_LIQUIBASE:
+                        return "PGSQL";
+                    case TargetDBType.MSSQL:
+                    case TargetDBType.MSSQL_LIQUIBASE:
+                    case TargetDBType.None:
+                    default:
+                        return "MSSQL";
+                }
+            }
+        }
 
         // Тип скрипта
         public ScriptType ScriptType { get; set; }
+        public string ScriptTypeToFilename
+        {
+            get
+            {
+                switch (this.ScriptType)
+                {
+                    case ScriptType.UPDATE:
+                        return "update";
+                    case ScriptType.DELETE:
+                        return "delete";
+                    case ScriptType.INSERT_UPDATE:
+                        if ( (this.TargetDB == TargetDBType.PGSQL) || (this.TargetDB == TargetDBType.PGSQL_LIQUIBASE) )
+                            return "upsert";
+                        else
+                            return "merge";
+                    case ScriptType.INSERT:
+                    default:
+                        return "insert";
+                }
+            }
+        }
 
         public QueryDB()
         {
-            this.TargetDB = TargetDBType.None;
+            this.TargetDB = TargetDBType.MSSQL;
+            this.ScriptType = ScriptType.INSERT;
             this.DataTable = new DataTable();
             this.IsUpdateDT = true;
         }
@@ -57,7 +99,23 @@ namespace SQLGen
         }
 
         // Обновлять insDT/UpdDT
-        public bool IsUpdateDT { get; set; }
+        bool _isupdatedt;
+        public bool IsUpdateDT
+        {
+            get { return _isupdatedt; }
+            set { _isupdatedt = value; }
+        }
+
+        [JsonIgnore]
+        public string IsUpdateDT_string
+        {
+            get { if (_isupdatedt == true) return "true"; else return "false"; }
+            set
+            {
+                if ((value == null) || (value.Trim().ToLower() == "") || (value.Trim().ToLower() != "true")) _isupdatedt = false;
+                else _isupdatedt = true;
+            }
+        }
 
         // PrimaryKey
         string _pk;
@@ -84,6 +142,43 @@ namespace SQLGen
         // текст итогового SQL-скрипта
         public string SQLScript { get; set; }
 
+        // имя файла со скриптом
+        string _filename;
+        public string ScriptFilename
+        {
+            get
+            {
+                if ((_filename == null) || (_filename == ""))
+                {
+                    string s = this.TargetDBTypeToFilename + " " + this.TaskNumber;
+                    if (this.TableName != "") s = s + " " + this.TableName;
+                    s = s + " " + this.ScriptTypeToFilename + ".sql";
+                    return s;
+                }
+                else return _filename.Trim();
+            }
+            set
+            {
+                _filename = value.Trim();
+            }
+        }
+
+
+        public void Fill(QueryDB _query)
+        {
+            if (_query != null)
+            {
+                this.TaskNumber = _query.TaskNumber;
+                this.TargetDB = _query.TargetDB;
+                this.ScriptType = _query.ScriptType;
+                this.TableName = _query.TableName;
+                this.IsUpdateDT = _query.IsUpdateDT;
+                this.PrimaryKey = _query.PrimaryKey;
+                this.SQLQuery = _query.SQLQuery;
+                this.SQLScript = _query.SQLScript;
+                this.ScriptFilename = _query.ScriptFilename;
+            }
+        }
 
 
         string ColumnValue(DataRow row, DataColumn column)
@@ -124,7 +219,7 @@ namespace SQLGen
                 Object.ReferenceEquals(column.DataType, typeof(Int64))
                 )
             {
-                return "" + row[column];
+                return "" + row[column].ToString().Replace(",",".");
             }
             else if (
                 Object.ReferenceEquals(column.DataType, typeof(Char)) ||
@@ -148,167 +243,181 @@ namespace SQLGen
         }
 
 
-        public string GenerateScript()
+        public void GenerateScript(System.IO.StreamWriter file, out string Script)
         {
-                string Script = "";
-
-                // Перед INSERT или INSERT/UPDATE
-                if ((ScriptType == ScriptType.INSERT) || (ScriptType == ScriptType.INSERT_UPDATE))
+            Script = Environment.NewLine;
+            
+            // Перед INSERT или INSERT/UPDATE
+            if ((ScriptType == ScriptType.INSERT) || (ScriptType == ScriptType.INSERT_UPDATE))
+            {
+                if ((this.TargetDB == TargetDBType.MSSQL) || (this.TargetDB == TargetDBType.MSSQL_LIQUIBASE))
                 {
-                    if ((this.TargetDB == TargetDBType.MSSQL) || (this.TargetDB == TargetDBType.MSSQL_LIQUIBASE))
-                    {
-                        if (Script != "") Script = Script + "\n";
-                        Script = Script + "SET IDENTITY_INSERT " + this.TableNameToScript + " ON";
-                        if (Script != "") Script = Script + "\n";
-                        Script = Script + "GO";
-                    }
+                    Script = Script + Environment.NewLine + "SET IDENTITY_INSERT " + this.TableNameToScript + " ON";
+                    Script = Script + Environment.NewLine + "GO";
                 }
+            }
 
-                // хинт для MS SQL
-                string mshint_change = "";
-                if ((this.TargetDB == TargetDBType.MSSQL) || (this.TargetDB == TargetDBType.MSSQL_LIQUIBASE)) mshint_change = "WITH (rowlock) ";
-                string mshint_sel = "";
-                if ((this.TargetDB == TargetDBType.MSSQL) || (this.TargetDB == TargetDBType.MSSQL_LIQUIBASE)) mshint_sel = "WITH (nolock) ";
+            // хинт для MS SQL
+            string mshint_change = "";
+            if ((this.TargetDB == TargetDBType.MSSQL) || (this.TargetDB == TargetDBType.MSSQL_LIQUIBASE)) mshint_change = "WITH (rowlock) ";
+            string mshint_sel = "";
+            if ((this.TargetDB == TargetDBType.MSSQL) || (this.TargetDB == TargetDBType.MSSQL_LIQUIBASE)) mshint_sel = "WITH (nolock) ";
 
-                // концовка оператора INSERT для PG SQL
-                string pgend = ")";
-                if ((this.TargetDB == TargetDBType.PGSQL) || (this.TargetDB == TargetDBType.PGSQL_LIQUIBASE)) pgend = ") ON CONFLICT DO NOTHING";
+            // концовка оператора INSERT для PG SQL
+            string pgend = ")";
+            if ((this.TargetDB == TargetDBType.PGSQL) || (this.TargetDB == TargetDBType.PGSQL_LIQUIBASE)) pgend = ") ON CONFLICT DO NOTHING";
 
+            if (file != null)
+            {
+                file.WriteLine(Script);
+                Script = "";
+            }
 
-                // Перебираем строки
-                foreach (DataRow row in this.DataTable.Rows)
+            // Перебираем строки
+            foreach (DataRow row in this.DataTable.Rows)
+            {
+                string addLine = "";
+                string fields = "";
+                string insvalues = "";
+                string updvalues = "";
+                string where = "";
+                string keys = this.PrimaryKey;
+                string[] PK = keys.ToLower().Split(',');
+                for (int i = 0; i < PK.Count(); i++) { PK[i] = PK[i].Trim(); }
+                string keyvalues = "";
+
+                // для PG SQL имя колонки в нижний регистр
+                if ((this.TargetDB == TargetDBType.PGSQL) || (this.TargetDB == TargetDBType.PGSQL_LIQUIBASE)) keys = keys.ToLower();
+
+                foreach (DataColumn column in this.DataTable.Columns)
                 {
-                    string addLine = "";
-                    string fields = "";
-                    string insvalues = "";
-                    string updvalues = "";
-                    string where = "";
-                    string keys = this.PrimaryKey;
-                    string[] PK = keys.ToLower().Split(',');
-                    for (int i = 0; i < PK.Count(); i++) { PK[i] = PK[i].Trim(); }
-                    string keyvalues = "";
+
+                    string ColumnName = column.ColumnName;
 
                     // для PG SQL имя колонки в нижний регистр
-                    if ((this.TargetDB == TargetDBType.PGSQL) || (this.TargetDB == TargetDBType.PGSQL_LIQUIBASE)) keys = keys.ToLower();
+                    if ((this.TargetDB == TargetDBType.PGSQL) || (this.TargetDB == TargetDBType.PGSQL_LIQUIBASE)) ColumnName = ColumnName.ToLower();
 
-                    foreach (DataColumn column in this.DataTable.Columns)
+                    // пропускаем rowversion
+                    if (ColumnName.ToLower().IndexOf("rowversion") != -1) continue;
+                    if (ColumnName.ToLower().IndexOf("timestamp") != -1) continue;
+
+
+                    if (fields != "") fields = fields + ", ";
+                    fields = fields + ColumnName;
+
+                    if (insvalues != "") insvalues = insvalues + ", ";
+                    insvalues = insvalues + ColumnValue(row, column);
+
+                    var pos = Array.IndexOf(PK, ColumnName.ToLower());
+                    if ((pos != -1) && (ScriptType != ScriptType.INSERT)) // условие where НЕ нужно только для "чистого" INSERT
                     {
-
-                        string ColumnName = column.ColumnName;
-
-                        // для PG SQL имя колонки в нижний регистр
-                        if ((this.TargetDB == TargetDBType.PGSQL) || (this.TargetDB == TargetDBType.PGSQL_LIQUIBASE)) ColumnName = ColumnName.ToLower();
-
-                        // пропускаем rowversion
-                        if (ColumnName.ToLower().IndexOf("rowversion") != -1) continue;
-                        if (ColumnName.ToLower().IndexOf("timestamp") != -1) continue;
-
-
-                        if (fields != "") fields = fields + ", ";
-                        fields = fields + ColumnName;
-
-                        if (insvalues != "") insvalues = insvalues + ", ";
-                        insvalues = insvalues + ColumnValue(row, column);
-
-                        var pos = Array.IndexOf(PK, ColumnName.ToLower());
-                        if ((pos != -1) && (ScriptType != ScriptType.INSERT)) // условие where НЕ нужно только для "чистого" INSERT
+                        if (where != "") where = where + " AND ";
+                        if (ScriptType == ScriptType.INSERT_UPDATE) // для INSERT/UPDATE
                         {
-                            if (where != "") where = where + " AND ";
-                            if (ScriptType == ScriptType.INSERT_UPDATE) // для INSERT/UPDATE
-                            {
-                                where = where + "target." + ColumnName + " = source." + ColumnName;
-                            }
-                            else // для UPDATE или DELETE
-                            {
-                                where = where + ColumnName + " = " + ColumnValue(row, column);
-                            }
-
-                            if (keyvalues != "") keyvalues = keyvalues + ", ";
-                            keyvalues = keyvalues + ColumnValue(row, column);
+                            where = where + "target." + ColumnName + " = source." + ColumnName;
                         }
-                        else
+                        else // для UPDATE или DELETE
                         {
-
-                            if ((ColumnName.ToLower().IndexOf("_insdt") == -1) &&
-                                (ColumnName.ToLower().IndexOf("_insid") == -1)) // поля _insdt и _insid не обновляем
-                            {
-                                if (updvalues != "") updvalues = updvalues + ", ";
-                                updvalues = updvalues + ColumnName + " = " + ColumnValue(row, column);
-                            }
-                        }
-                    }
-
-                    // INSERT
-                    if (ScriptType == ScriptType.INSERT)
-                    {
-                        addLine = "INSERT INTO " + TableNameToScript + " " + mshint_change + "(" + fields + ") \nVALUES (" + insvalues + pgend + ";";
-                    }
-
-                    // INSERT/UPDATE
-                    if (ScriptType == ScriptType.INSERT_UPDATE)
-                    {
-                        if (where == "") throw new ArgumentException($"В таблице " + TableName + " не найдены поля Primary Key: " + keys + " !");
-
-                        if ((this.TargetDB == TargetDBType.MSSQL) || (this.TargetDB == TargetDBType.MSSQL_LIQUIBASE)) // для MS SQL
-                        {
-                            addLine = "MERGE " + TableNameToScript + " " + mshint_change + "AS target \nUSING (SELECT " + keyvalues + ") AS source (" + keys + ")" +
-                            "\nON " + where + " " +
-                            "\nWHEN MATCHED THEN UPDATE SET " + updvalues +
-                            "\nWHEN NOT MATCHED THEN INSERT (" + fields + ")" +
-                            "\nVALUES (" + insvalues + ");";
+                            where = where + ColumnName + " = " + ColumnValue(row, column);
                         }
 
-                        if ((this.TargetDB == TargetDBType.PGSQL) || (this.TargetDB == TargetDBType.PGSQL_LIQUIBASE)) // для PG SQL
+                        if (keyvalues != "") keyvalues = keyvalues + ", ";
+                        keyvalues = keyvalues + ColumnValue(row, column);
+                    }
+                    else
+                    {
+
+                        if ((ColumnName.ToLower().IndexOf("_insdt") == -1) &&
+                            (ColumnName.ToLower().IndexOf("_insid") == -1)) // поля _insdt и _insid не обновляем
                         {
-                            addLine = "INSERT INTO " + TableNameToScript + " (" + fields + ") \nVALUES (" + insvalues + ") " +
-                            "\nON CONFLICT (" + keys + ") DO UPDATE SET " + updvalues + ";";
-                        }
-                    }
-
-                    // UPDATE
-                    if (ScriptType == ScriptType.UPDATE)
-                    {
-                        if (where == "") throw new ArgumentException($"В таблице " + TableName + " не найдены поля Primary Key: " + keys + " !");
-                        addLine = "UPDATE " + TableNameToScript + " " + mshint_change + "\nSET " + updvalues + " \nWHERE " + where + ";";
-                    }
-
-                    // DELETE
-                    if (ScriptType == ScriptType.DELETE)
-                    {
-                        if (where == "") throw new ArgumentException($"В таблице " + TableName + " не найдены поля Primary Key: " + keys + " !");
-                        addLine = "DELETE FROM " + TableNameToScript + " " + mshint_change + "WHERE " + where + ";";
-                    }
-
-
-                    if (addLine != "")
-                    {
-                        if (Script != "") Script = Script + "\n";
-                        Script = Script + addLine;
-                        if ((this.TargetDB == TargetDBType.MSSQL) || (this.TargetDB == TargetDBType.MSSQL_LIQUIBASE))
-                        {
-                            if (Script != "") Script = Script + "\n";
-                            Script = Script + "GO";
+                            if (updvalues != "") updvalues = updvalues + ", ";
+                            updvalues = updvalues + ColumnName + " = " + ColumnValue(row, column);
                         }
                     }
                 }
 
-                // После INSERT или INSERT/UPDATE
-                if ((ScriptType == ScriptType.INSERT) || (ScriptType == ScriptType.INSERT_UPDATE))
+                // INSERT
+                if (ScriptType == ScriptType.INSERT)
                 {
+                    addLine = "INSERT INTO " + TableNameToScript + " " + mshint_change + "(" + fields + ") "+
+                    Environment.NewLine+"VALUES (" + insvalues + pgend + ";";
+                }
+
+                // INSERT/UPDATE
+                if (ScriptType == ScriptType.INSERT_UPDATE)
+                {
+                    if (where == "") throw new ArgumentException($"В таблице " + TableName + " не найдены поля Primary Key: " + keys + " !");
+
+                    if ((this.TargetDB == TargetDBType.MSSQL) || (this.TargetDB == TargetDBType.MSSQL_LIQUIBASE)) // для MS SQL
+                    {
+                        addLine = "MERGE " + TableNameToScript + " " + mshint_change + "AS target "+
+                        Environment.NewLine+"USING (SELECT " + keyvalues + ") AS source (" + keys + ")" +
+                        Environment.NewLine+"ON " + where + " " +
+                        Environment.NewLine+"WHEN MATCHED THEN UPDATE SET " + updvalues +
+                        Environment.NewLine+"WHEN NOT MATCHED THEN INSERT (" + fields + ")" +
+                        Environment.NewLine+"VALUES (" + insvalues + ");";
+                    }
+
+                    if ((this.TargetDB == TargetDBType.PGSQL) || (this.TargetDB == TargetDBType.PGSQL_LIQUIBASE)) // для PG SQL
+                    {
+                        addLine = "INSERT INTO " + TableNameToScript + " (" + fields + ") "+
+                        Environment.NewLine+"VALUES (" + insvalues + ") " +
+                        Environment.NewLine+"ON CONFLICT (" + keys + ") DO UPDATE SET " + updvalues + ";";
+                    }
+                }
+
+                // UPDATE
+                if (ScriptType == ScriptType.UPDATE)
+                {
+                    if (where == "") throw new ArgumentException($"В таблице " + TableName + " не найдены поля Primary Key: " + keys + " !");
+                    addLine = "UPDATE " + TableNameToScript + " " + mshint_change + 
+                    Environment.NewLine+"SET " + updvalues + " "+
+                    Environment.NewLine+"WHERE " + where + ";";
+                }
+
+                // DELETE
+                if (ScriptType == ScriptType.DELETE)
+                {
+                    if (where == "") throw new ArgumentException($"В таблице " + TableName + " не найдены поля Primary Key: " + keys + " !");
+                    addLine = "DELETE FROM " + TableNameToScript + " " + mshint_change + "WHERE " + where + ";";
+                }
+
+
+                if (addLine != "")
+                {
+                    Script = Script + Environment.NewLine + addLine;
                     if ((this.TargetDB == TargetDBType.MSSQL) || (this.TargetDB == TargetDBType.MSSQL_LIQUIBASE))
                     {
-                        if (Script != "") Script = Script + "\n";
-                        Script = Script + "SET IDENTITY_INSERT " + TableName + " OFF";
-                        if (Script != "") Script = Script + "\n";
-                        Script = Script + "GO";
+                        Script = Script + Environment.NewLine + "GO";
+                    }
+
+                    if (file != null)
+                    {
+                        file.Write(Script);
+                        Script = "";
                     }
                 }
+            }
 
-                // Проверка
-                if (Script != "") Script = Script + "\n\n-- Проверка\n";
-                Script = Script + "-- SELECT * FROM " + TableNameToScript + " " + mshint_sel + ";";
+            // После INSERT или INSERT/UPDATE
+            if ((ScriptType == ScriptType.INSERT) || (ScriptType == ScriptType.INSERT_UPDATE))
+            {
+                if ((this.TargetDB == TargetDBType.MSSQL) || (this.TargetDB == TargetDBType.MSSQL_LIQUIBASE))
+                {
+                    Script = Script + Environment.NewLine + "SET IDENTITY_INSERT " + TableName + " OFF";
+                    Script = Script + Environment.NewLine + "GO";
+                }
+            }
 
-                return Script;
+            // Проверка
+            Script = Script + Environment.NewLine+Environment.NewLine+"-- Проверка";
+            Script = Script + Environment.NewLine+ "-- SELECT * FROM " + TableNameToScript + " " + mshint_sel + ";";
+
+            if (file != null)
+            {
+                file.WriteLine(Script);
+                Script = "";
+            }
         }
 
     }

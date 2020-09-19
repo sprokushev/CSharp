@@ -25,7 +25,7 @@ namespace SQLGen
 
         private void LoadConnects()
         {
-            string filename = Path.GetTempPath() + "ListConnects.json";
+            string filename = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\ListConnects.json";
             if (File.Exists(filename))
                 try
                 {
@@ -46,7 +46,7 @@ namespace SQLGen
                 WriteIndented = true
             };
 
-            string filename = Path.GetTempPath() + "ListConnects.json";
+            string filename = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\ListConnects.json";
             try
             {
                 string jsonString = JsonSerializer.Serialize<List<ConnectDB>>(ListConnects, options);
@@ -175,6 +175,7 @@ namespace SQLGen
 
             if (Connect.IsConnected == ConnType.None)
             {
+                tabAlls.Visibility = Visibility.Hidden;
                 tabTask.Visibility = Visibility.Collapsed;
                 tabData.Visibility = Visibility.Collapsed;
                 tabAlter.Visibility = Visibility.Collapsed;
@@ -183,12 +184,20 @@ namespace SQLGen
             else
             {
                 this.Title = Connect.DBConnectionName;
+
+                tabAlls.Visibility = Visibility.Visible;
+                tabTask.Visibility = Visibility.Visible;
+                tabData.Visibility = Visibility.Visible;
+                tabAlter.Visibility = Visibility.Visible;
+
+                // очистка по умолчанию
                 btClearFields_Click(sender, e);
                 cbScriptCreateType.SelectedIndex = 0;
                 cbScriptType.SelectedIndex = 0;
 
-                tabData.Visibility = Visibility.Visible;
-                tabAlter.Visibility = Visibility.Visible;
+                // сюда добавлю обработку загрузки задачи из коммандной строки
+                SetTask(null);
+                tbTaskExecutor.Text = (string)Microsoft.Win32.Registry.GetValue(keyName, "TaskExecutor", "sergey.prokushev@rtmis.ru");
 
                 var item = ListConnects.Find(x => (x.DBConnectionName == Connect.DBConnectionName));
                 if ( item == null )
@@ -196,7 +205,7 @@ namespace SQLGen
                     ListConnects.Add(Connect);
                 }
 
-                tabTask.Focus();
+                
             }
 
         }
