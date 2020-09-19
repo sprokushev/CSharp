@@ -240,6 +240,7 @@
             this.Name = "FormLogin";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Подключение к БД";
+            this.Shown += new System.EventHandler(this.FormLogin_Shown);
             this.ResumeLayout(false);
             this.PerformLayout();
 

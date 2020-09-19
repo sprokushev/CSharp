@@ -72,10 +72,10 @@ namespace SQLGen
         public TableType TableType { get; set; }
 
         // Оригинальная таблица
-        public TableInfo TableOrig;
+        public TableInfo TableOrig { get; set; }
 
         // Измененная таблица
-        public TableInfo TableEdit;
+        public TableInfo TableEdit { get; set; }
 
         // Флаг добавления Drop
         public Boolean isAddDrop { get; set; }

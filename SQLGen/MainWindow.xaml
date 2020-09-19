@@ -11,26 +11,27 @@
                 <MenuItem x:Name="miConnect" Header="Подключиться к БД" Click="miConnect_Click" />
             </MenuItem>
             <MenuItem x:Name="miTask" Header="Задача">
-                <MenuItem x:Name="miNewTask" Header="Новая задача" ></MenuItem>
-                <MenuItem x:Name="miOpenTask" Header="Открыть задачу" ></MenuItem>
-                <MenuItem x:Name="miSaveTask" Header="Сохранить задачу" ></MenuItem>
-                <MenuItem x:Name="miSaveTaskAs" Header="Сохранить задачу как ..." ></MenuItem>
+                <MenuItem x:Name="miNewTask" Header="Новая задача" Click="miNewTask_Click" ></MenuItem>
+                <MenuItem x:Name="miOpenTask" Header="Открыть задачу" Click="miOpenTask_Click" ></MenuItem>
+                <MenuItem x:Name="miSaveTask" Header="Сохранить задачу" Click="miSaveTask_Click" ></MenuItem>
             </MenuItem>
         </Menu>
         <TabControl x:Name="tabAlls" Margin="0,25,0,0">
             <TabItem x:Name="tabTask" Header="Задача">
                 <Grid Background="#FFE5E5E5" Margin="0,5,0,0">
-                    <Label Content="Номер задачи:" HorizontalAlignment="Left" Margin="6,6,0,0" Height="26" VerticalAlignment="Top"/>
-                    <TextBox x:Name="tbTaskNumber" HorizontalAlignment="Left" Height="23" Margin="100,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="197" LostFocus="tbTaskNumber_LostFocus"/>
-                    <Label Content="URL задачи:" HorizontalAlignment="Left" Margin="6,37,0,0" Height="26" VerticalAlignment="Top"/>
-                    <TextBox x:Name="tbTaskUrl" HorizontalAlignment="Left" Height="23" Margin="100,43,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="479" TextChanged="tbTaskUrl_TextChanged"/>
-                    <Button x:Name="tbGoUrl" Content="Открыть страницу" HorizontalAlignment="Left" Margin="593,43,0,0" VerticalAlignment="Top" Width="121" Click="tbGoUrl_Click"/>
-                    <Label Content="Описание задачи:" HorizontalAlignment="Left" Margin="6,63,0,0" Height="26" VerticalAlignment="Top"/>
-                    <TextBox x:Name="tbTaskDesc" HorizontalAlignment="Left" Height="85" Margin="10,85,0,0" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" VerticalAlignment="Top" Width="569" TextChanged="tbTaskDesc_TextChanged"/>
-                    <Label Content="Исполнитель:" HorizontalAlignment="Left" Margin="6,171,0,0" Height="26" VerticalAlignment="Top"/>
-                    <TextBox x:Name="tbTaskExecutor" HorizontalAlignment="Left" Height="23" Margin="100,175,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="479" TextChanged="tbTaskExecutor_TextChanged"/>
-                    <Label Content="Скрипты:" HorizontalAlignment="Left" Margin="6,200,0,0" Height="26" VerticalAlignment="Top"/>
-                    <DataGrid x:Name="dgScripts" AutoGenerateColumns="False" Margin="0,230,0,50" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False" MouseDoubleClick="dgScripts_MouseDoubleClick">
+                    <Label Content="Каталог для задач:" HorizontalAlignment="Left" Margin="6,10,0,0" Height="26" VerticalAlignment="Top"/>
+                    <TextBox x:Name="tbTaskFolder" HorizontalAlignment="Left" Height="23" Margin="120,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="197" LostFocus="tbTaskFolder_LostFocus"/>
+                    <Label Content="Номер задачи:" HorizontalAlignment="Left" Margin="6,36,0,0" Height="26" VerticalAlignment="Top"/>
+                    <TextBox x:Name="tbTaskNumber" HorizontalAlignment="Left" Height="23" Margin="120,40,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="197" LostFocus="tbTaskNumber_LostFocus"/>
+                    <Label Content="URL задачи:" HorizontalAlignment="Left" Margin="6,67,0,0" Height="26" VerticalAlignment="Top"/>
+                    <TextBox x:Name="tbTaskUrl" HorizontalAlignment="Left" Height="23" Margin="120,73,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="459" TextChanged="tbTaskUrl_TextChanged" LostFocus="tbTaskUrl_LostFocus"/>
+                    <Button x:Name="tbGoUrl" Content="Открыть страницу" HorizontalAlignment="Left" Margin="593,73,0,0" VerticalAlignment="Top" Width="121" Click="tbGoUrl_Click"/>
+                    <Label Content="Описание задачи:" HorizontalAlignment="Left" Margin="6,93,0,0" Height="26" VerticalAlignment="Top"/>
+                    <TextBox x:Name="tbTaskDesc" HorizontalAlignment="Left" Height="85" Margin="10,115,0,0" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" VerticalAlignment="Top" Width="569" TextChanged="tbTaskDesc_TextChanged"/>
+                    <Label Content="Исполнитель:" HorizontalAlignment="Left" Margin="6,201,0,0" Height="26" VerticalAlignment="Top"/>
+                    <TextBox x:Name="tbTaskExecutor" HorizontalAlignment="Left" Height="23" Margin="100,205,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="479" TextChanged="tbTaskExecutor_TextChanged" LostFocus="tbTaskExecutor_LostFocus"/>
+                    <Label Content="Скрипты:" HorizontalAlignment="Left" Margin="6,230,0,0" Height="26" VerticalAlignment="Top"/>
+                    <DataGrid x:Name="dgScripts" AutoGenerateColumns="False" Margin="0,260,0,50" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False" MouseDoubleClick="dgScripts_MouseDoubleClick">
                         <DataGrid.Columns>
                             <DataGridTextColumn x:Name="ScriptName" Header="Название" Width="300" Binding="{Binding Path=ScriptName}" />
                             <DataGridComboBoxColumn x:Name="ScriptTypename" Header="Тип скрипта" Width="150" 
@@ -46,6 +47,7 @@
                             </ContextMenu>
                         </DataGrid.ContextMenu>
                     </DataGrid>
+                    <Button x:Name="btFolder" Content="Найти" HorizontalAlignment="Left" Height="23" Margin="323,10,0,0" VerticalAlignment="Top" Width="92" Click="btFolder_Click"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="tabAlter" Header="Структура">

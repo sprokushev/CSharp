@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using System.Windows.Data;
 using System.ComponentModel;
 using System.Windows.Input;
+using System.IO;
 
 namespace SQLGen
 {
@@ -21,6 +22,7 @@ namespace SQLGen
         {
             get
             {
+                if (_task == null) _task = "";
                 return this._task.Trim();
             }
             set
@@ -185,12 +187,26 @@ namespace SQLGen
 
         public void SetTask(Task _task)
         {
+
             if (Task == null) Task = new Task();
+
+            if (Task.TaskNumber != "")
+            {
+                var dir = System.IO.Path.Combine(tbTaskFolder.Text, Task.TaskNumber);
+                string filename = dir + "\\" + Task.TaskNumber + ".task";
+                if ( File.Exists(filename) || (System.Windows.Forms.MessageBox.Show("Сохранить задачу " + Task.TaskNumber + " в папке  " + dir + " ?", "Сохранить", System.Windows.Forms.MessageBoxButtons.YesNoCancel) == System.Windows.Forms.DialogResult.Yes)
+                   )
+                {
+                    SaveTask(Task);
+                }    
+
+            }
 
             tbTaskNumber.Text = "";
             tbTaskUrl.Text = "";
             tbTaskDesc.Text = "";
-            tbTaskExecutor.Text = "";
+            tbTaskExecutor.Text = (string)Microsoft.Win32.Registry.GetValue(keyName, "TaskExecutor", "sergey.prokushev@rtmis.ru");
+            tbTaskFolder.Text = (string)Microsoft.Win32.Registry.GetValue(keyName, "TaskFolder", "");
 
             ScriptTypename.ItemsSource = ScriptTypenames;
             Task.Scripts.Clear();
@@ -213,11 +229,44 @@ namespace SQLGen
 
             }
 
+            tabAlter.Header = "Структура";
+            tabData.Header = "Данные";
             tabTask.Focus();
             dgScriptsRefresh();
             tbTaskNumber.Focus();
         }
 
+        public void SaveTask(Task _task)
+        {
+            if (_task != null)
+            {
+                var options = new JsonSerializerOptions
+                {
+                    IgnoreReadOnlyProperties = true,
+                    WriteIndented = true
+                };
+
+                var dir = System.IO.Path.Combine(tbTaskFolder.Text, _task.TaskNumber);
+                if ((dir != "") && (!System.IO.Directory.Exists(dir)) &&
+                     (System.Windows.Forms.MessageBox.Show("Создать папку задачи " + _task.TaskNumber + " в каталоге задач " + tbTaskFolder.Text + " ?", "Создать", System.Windows.Forms.MessageBoxButtons.YesNoCancel) == System.Windows.Forms.DialogResult.Yes)
+                     )
+                {
+                    System.IO.DirectoryInfo di = System.IO.Directory.CreateDirectory(dir);
+                }
+
+                string filename = dir + "\\"+ _task.TaskNumber+".task";
+                try
+                {
+                    string jsonString = JsonSerializer.Serialize<Task>(_task, options);
+                    File.WriteAllText(filename, jsonString);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+
+            }
+        }
 
         private void dgScriptsRefresh()
         {
@@ -242,7 +291,6 @@ namespace SQLGen
 
         private void tbTaskExecutor_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Microsoft.Win32.Registry.SetValue(keyName, "TaskExecutor", tbTaskExecutor.Text.Trim());
             Task.TaskExecutor = tbTaskExecutor.Text;
         }
 
@@ -259,6 +307,7 @@ namespace SQLGen
 
         private void DeleteScript_Click(object sender, RoutedEventArgs e)
         {
+            tabTask.Focus();
             dgScripts.Focus();
             if (dgScripts.SelectedIndex >= 0)
             {
@@ -270,6 +319,7 @@ namespace SQLGen
 
         private void AddAlterScript_Click(object sender, RoutedEventArgs e)
         {
+            tabTask.Focus();
             dgScripts.Focus();
             if (tbTaskNumber.Text.Trim() == "")
             {
@@ -280,6 +330,7 @@ namespace SQLGen
             else
             {
                 CurrentScript = Task.AddScript("", BaseScriptType.ALTER, "", null, null);
+                CurrentScript.Query = null;
                 SetTable(CurrentScript.Table);
                 dgScriptsRefresh();
             }
@@ -287,6 +338,7 @@ namespace SQLGen
 
         private void AddDataScript_Click(object sender, RoutedEventArgs e)
         {
+            tabTask.Focus();
             dgScripts.Focus();
             if (tbTaskNumber.Text.Trim() == "")
             {
@@ -297,6 +349,7 @@ namespace SQLGen
             else
             {
                 CurrentScript = Task.AddScript("", BaseScriptType.DATA, "", null, null);
+                CurrentScript.Table = null;
                 SetQuery(CurrentScript.Query);
                 dgScriptsRefresh();
             }
@@ -304,8 +357,18 @@ namespace SQLGen
 
         private void tbTaskNumber_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (tbTaskUrl.Text.Trim() == "") tbTaskUrl.Text = "https://jira.is-mis.ru/browse/" + tbTaskNumber.Text.Trim();
             Task.TaskNumber = tbTaskNumber.Text;
+
+            string TaskUrlDefault = (string)Microsoft.Win32.Registry.GetValue(keyName, "TaskUrlDefault", "https://jira.is-mis.ru/browse/");
+            tbTaskUrl.Text = TaskUrlDefault + tbTaskNumber.Text.Trim();
+
+            var dir = System.IO.Path.Combine(tbTaskFolder.Text, tbTaskNumber.Text);
+            if ( (dir != "") && (!System.IO.Directory.Exists(dir)) &&
+                 (System.Windows.Forms.MessageBox.Show("Создать папку задачи "+ tbTaskNumber.Text+ " в каталоге задач " + tbTaskFolder.Text +" ?", "Создать", System.Windows.Forms.MessageBoxButtons.YesNoCancel) == System.Windows.Forms.DialogResult.Yes)
+                 )
+            {
+                System.IO.DirectoryInfo di = System.IO.Directory.CreateDirectory(dir);
+            }
 
         }
 
@@ -329,6 +392,81 @@ namespace SQLGen
 
         }
 
-    }
+        private void btFolder_Click(object sender, RoutedEventArgs e)
+        {
+            string dir = FolderBrowserDialog(tbTaskFolder.Text);
+            if (dir != "") tbTaskFolder.Text = dir;
+        }
 
+        private void tbTaskFolder_LostFocus(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.Registry.SetValue(keyName, "TaskFolder", tbTaskFolder.Text.Trim());
+        }
+
+        private void tbTaskExecutor_LostFocus(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.Registry.SetValue(keyName, "TaskExecutor", tbTaskExecutor.Text.Trim());
+        }
+
+        private void tbTaskUrl_LostFocus(object sender, RoutedEventArgs e)
+        {
+            int pos = tbTaskUrl.Text.IndexOf(tbTaskNumber.Text.Trim());
+            string TaskUrlDefault = tbTaskUrl.Text.Substring(0, pos).Trim();
+            if (TaskUrlDefault != "")
+            {
+                Microsoft.Win32.Registry.SetValue(keyName, "TaskUrlDefault", TaskUrlDefault);
+            }
+
+        }
+
+        private void miNewTask_Click(object sender, RoutedEventArgs e)
+        {
+            tabTask.Focus();
+            dgScripts.Focus();
+
+            if (Connect.IsConnected != ConnType.None)
+            {
+                SetTask(null);
+            }
+        }
+
+        private void miSaveTask_Click(object sender, RoutedEventArgs e)
+        {
+            tabTask.Focus();
+            dgScripts.Focus();
+
+            if (tbTaskNumber.Text.Trim() == "")
+            {
+                MessageBox.Show("Необходимо заполнить Номер задачи !");
+                tbTaskNumber.Focus();
+                return;
+            }
+            else if (Connect.IsConnected != ConnType.None)
+            {
+                SaveTask(Task);
+            }
+        }
+
+        private void miOpenTask_Click(object sender, RoutedEventArgs e)
+        {
+            tabTask.Focus();
+            dgScripts.Focus();
+
+            string filename = OpenTaskDialog(tbTaskFolder.Text);
+            if ((filename != "") && (File.Exists(filename)))
+                try
+                {
+                    string jsonString = File.ReadAllText(filename);
+                    Task loadTask = JsonSerializer.Deserialize<Task>(jsonString);
+                    SetTask(loadTask);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+
+        }
+    }
 }
+
+

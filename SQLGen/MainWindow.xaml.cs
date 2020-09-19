@@ -76,7 +76,50 @@ namespace SQLGen
                 fs = new FileStream(filename, mode);
                 return filename;
             }
-            else return "";
+            
+            return "";
+        }
+
+        public string OpenTaskDialog(string pathname)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.InitialDirectory = pathname;
+            string filename = "";
+            dlg.DefaultExt = ".task"; // Default file extension
+            dlg.Filter = "(*.task)|*.task|Все файлы (*.*)|*.*"; // Filter files by extension
+            dlg.CheckFileExists = true;
+
+            Nullable<bool> result = dlg.ShowDialog();
+
+            if (result == true)
+            {
+                filename = dlg.FileName;
+
+                if (File.Exists(filename))
+                {
+                    return filename;
+                }
+            }
+            
+            return "";
+        }
+
+        public string FolderBrowserDialog(string pathname)
+        {
+
+            using (var fbd = new System.Windows.Forms.FolderBrowserDialog())
+            {
+                fbd.SelectedPath = pathname;
+                fbd.ShowNewFolderButton = true;
+                System.Windows.Forms.DialogResult result = fbd.ShowDialog();
+
+                if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                {
+                    return fbd.SelectedPath;
+                }
+            }
+
+            return "";
         }
 
     }

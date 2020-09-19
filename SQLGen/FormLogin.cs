@@ -19,6 +19,7 @@ namespace SQLGen
 
         public string connetionString;
         public List<ConnectDB> ListConnects = new List<ConnectDB>();
+        public string currentDBConnectionName;
 
         private void btConnect_Click(object sender, EventArgs e)
         {
@@ -222,6 +223,11 @@ namespace SQLGen
                     cbConnectionHistory.Text = "";
                 }
             }
+        }
+
+        private void FormLogin_Shown(object sender, EventArgs e)
+        {
+            cbConnectionHistory.SelectedItem = currentDBConnectionName;
         }
     }
 }

@@ -195,13 +195,13 @@ namespace SQLGen
 
                 try
                 {
+                    tabData.Header = Query.ScriptFilename;
                     this.Cursor = Cursors.Wait;
                     tbScriptIUD.Clear();
                     string script = "";
                     Query.GenerateScript(null, out script);
                     tbScriptIUD.Text = script;
                     tabScriptIUD.IsSelected = true;
-                    tabData.Header = Query.ScriptFilename;
                 }
                 catch (Exception ex)
                 {
@@ -230,30 +230,33 @@ namespace SQLGen
 
                 try
                 {
-                    Query.ScriptFilename = SaveFileDialog (Query.ScriptFilename, out fs);
                     tabData.Header = Query.ScriptFilename;
-                    using (StreamWriter file = new StreamWriter(fs, encoding))
+                    Query.ScriptFilename = SaveFileDialog (Query.ScriptFilename, out fs);
+                    if (fs != null)
                     {
+                        using (StreamWriter file = new StreamWriter(fs, encoding))
+                        {
 
-                                try
-                                {
-                                    this.Cursor = Cursors.Wait;
-                                    string script = "";
-                                    Query.GenerateScript(file, out script);
+                            try
+                            {
+                                this.Cursor = Cursors.Wait;
+                                string script = "";
+                                Query.GenerateScript(file, out script);
 
-                                }
-                                catch (Exception ex)
-                                {
-                                    MessageBox.Show(ex.Message);
-                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show(ex.Message);
+                            }
 
-                    }
-                    if (CurrentScript != null)
-                    {
-                        CurrentScript.ScriptFilename = Query.ScriptFilename;
-                        CurrentScript.Query.Fill(Query);
-                        tabTask.Focus();
-                        dgScripts.Focus();
+                        }
+                        if (CurrentScript != null)
+                        {
+                            CurrentScript.ScriptFilename = Query.ScriptFilename;
+                            CurrentScript.Query.Fill(Query);
+                            tabTask.Focus();
+                            dgScripts.Focus();
+                        }
                     }
 
                 }
@@ -300,8 +303,8 @@ namespace SQLGen
 
             try
             {
-                Query.ScriptFilename = SaveFileDialog(Query.ScriptFilename, out fs);
                 tabData.Header = Query.ScriptFilename;
+                Query.ScriptFilename = SaveFileDialog(Query.ScriptFilename, out fs);
                 using (StreamWriter file = new StreamWriter(fs, encoding))
                 {
 

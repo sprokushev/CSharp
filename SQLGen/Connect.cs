@@ -98,6 +98,8 @@ namespace SQLGen
 
             dlg1.connetionString = "";
 
+            dlg1.currentDBConnectionName = (string)Microsoft.Win32.Registry.GetValue(keyName, "LastDBConnectionName", "");
+
             if (dlg1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 Connect = new ConnectDB();
@@ -179,16 +181,24 @@ namespace SQLGen
                 tabTask.Visibility = Visibility.Collapsed;
                 tabData.Visibility = Visibility.Collapsed;
                 tabAlter.Visibility = Visibility.Collapsed;
+                miNewTask.IsEnabled = false;
+                miOpenTask.IsEnabled = false;
+                miSaveTask.IsEnabled = false;
+
                 this.Title = "Нет подключения к БД !";
             }
             else
             {
                 this.Title = Connect.DBConnectionName;
+                Microsoft.Win32.Registry.SetValue(keyName, "LastDBConnectionName", Connect.DBConnectionName);
 
                 tabAlls.Visibility = Visibility.Visible;
                 tabTask.Visibility = Visibility.Visible;
                 tabData.Visibility = Visibility.Visible;
                 tabAlter.Visibility = Visibility.Visible;
+                miNewTask.IsEnabled = true;
+                miOpenTask.IsEnabled = true;
+                miSaveTask.IsEnabled = true;
 
                 // очистка по умолчанию
                 btClearFields_Click(sender, e);
@@ -197,7 +207,6 @@ namespace SQLGen
 
                 // сюда добавлю обработку загрузки задачи из коммандной строки
                 SetTask(null);
-                tbTaskExecutor.Text = (string)Microsoft.Win32.Registry.GetValue(keyName, "TaskExecutor", "sergey.prokushev@rtmis.ru");
 
                 var item = ListConnects.Find(x => (x.DBConnectionName == Connect.DBConnectionName));
                 if ( item == null )
