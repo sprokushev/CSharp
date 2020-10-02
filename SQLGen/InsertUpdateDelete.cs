@@ -33,7 +33,7 @@ namespace SQLGen
             tbPrimaryKey.Text = "";
             tbScriptIUD.Text = "";
             isUpdateDT.IsChecked = false;
-            tabData.Header = Query.ScriptFilename;
+            //tabData.Header = Query.ScriptFilename;
 
 
             // новые значения
@@ -88,7 +88,7 @@ namespace SQLGen
                         break;
                 }
 
-                tabData.Header = Query.ScriptFilename;
+                //tabData.Header = Query.ScriptFilename;
             }
 
             Query.DataTable = new DataTable();
@@ -195,11 +195,13 @@ namespace SQLGen
 
                 try
                 {
-                    tabData.Header = Query.ScriptFilename;
+                    //tabData.Header = Query.ScriptFilename;
                     this.Cursor = Cursors.Wait;
                     tbScriptIUD.Clear();
                     string script = "";
-                    Query.GenerateScript(null, out script);
+                    string title = "";
+                    if (Task != null) title = Task.TaskInfoToScript;
+                    Query.GenerateScript(title, null, out script);
                     tbScriptIUD.Text = script;
                     tabScriptIUD.IsSelected = true;
                 }
@@ -230,8 +232,8 @@ namespace SQLGen
 
                 try
                 {
-                    tabData.Header = Query.ScriptFilename;
-                    Query.ScriptFilename = SaveFileDialog (Query.ScriptFilename, out fs);
+                    //tabData.Header = Query.ScriptFilename;
+                    string filename = SaveFileDialog (Query.ScriptFilename, out fs);
                     if (fs != null)
                     {
                         using (StreamWriter file = new StreamWriter(fs, encoding))
@@ -241,7 +243,10 @@ namespace SQLGen
                             {
                                 this.Cursor = Cursors.Wait;
                                 string script = "";
-                                Query.GenerateScript(file, out script);
+                                string title = "";
+                                if (Task != null) title = Task.TaskInfoToScript;
+                                Query.GenerateScript(title, file, out script);
+                                dgFilesInTaskRefresh();
 
                             }
                             catch (Exception ex)
@@ -250,13 +255,13 @@ namespace SQLGen
                             }
 
                         }
-                        if (CurrentScript != null)
+/*                        if (CurrentScript != null)
                         {
                             CurrentScript.ScriptFilename = Query.ScriptFilename;
                             CurrentScript.Query.Fill(Query);
                             tabTask.Focus();
                             dgScripts.Focus();
-                        }
+                        }*/
                     }
 
                 }
@@ -303,33 +308,38 @@ namespace SQLGen
 
             try
             {
-                tabData.Header = Query.ScriptFilename;
-                Query.ScriptFilename = SaveFileDialog(Query.ScriptFilename, out fs);
-                using (StreamWriter file = new StreamWriter(fs, encoding))
+                //tabData.Header = Query.ScriptFilename;
+                string filename = SaveFileDialog(Query.ScriptFilename, out fs);
+                if (fs != null)
                 {
-
-                    try
+                    using (StreamWriter file = new StreamWriter(fs, encoding))
                     {
-                        this.Cursor = Cursors.Wait;
-                        string script = "";
-                        Query.GenerateScript(null, out script);
-                        tbScriptIUD.Text = script;
-                        file.WriteLine(tbScriptIUD.Text);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message);
-                    }
 
-                }
-                if (CurrentScript != null)
-                {
-                    CurrentScript.ScriptFilename = Query.ScriptFilename;
-                    CurrentScript.Query.Fill(Query);
-                    tabTask.Focus();
-                    dgScripts.Focus();
-                }
+                        try
+                        {
+                            this.Cursor = Cursors.Wait;
+                            string script = "";
+                            string title = "";
+                            if (Task != null) title = Task.TaskInfoToScript;
+                            Query.GenerateScript(title, null, out script);
+                            tbScriptIUD.Text = script;
+                            file.WriteLine(tbScriptIUD.Text);
+                            dgFilesInTaskRefresh();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message);
+                        }
 
+                    }
+                    /*                if (CurrentScript != null)
+                                    {
+                                        CurrentScript.ScriptFilename = Query.ScriptFilename;
+                                        CurrentScript.Query.Fill(Query);
+                                        tabTask.Focus();
+                                        dgScripts.Focus();
+                                    }*/
+                }
             }
             finally
             {
@@ -342,13 +352,13 @@ namespace SQLGen
         private void btClipboardIUD_Click(object sender, RoutedEventArgs e)
         {
             Clipboard.SetText(tbScriptIUD.Text);
-            if (CurrentScript != null)
+/*            if (CurrentScript != null)
             {
                 CurrentScript.ScriptFilename = Query.ScriptFilename;
                 CurrentScript.Query.Fill(Query);
                 tabTask.Focus();
                 dgScripts.Focus();
-            }
+            }*/
         }
 
 

@@ -65,7 +65,7 @@ namespace SQLGen
             isAddDrop.IsChecked = false;
             cbScriptCreateType.SelectedIndex = 0;
             tbScriptCreate.Text = "";
-            tabAlter.Header = Table.ScriptFilename;
+            //tabAlter.Header = Table.ScriptFilename;
 
             Table.TableOrig.ListField.Clear();
             Table.TableEdit.ListField.Clear();
@@ -140,7 +140,7 @@ namespace SQLGen
                 }
 
                 tbScriptCreate.Text = _table.SQLScript;
-                tabAlter.Header = Table.ScriptFilename;
+                //tabAlter.Header = Table.ScriptFilename;
 
             }
 
@@ -405,18 +405,22 @@ ORDER BY alterobjectlog_insdt desc limit 10";
 
             try
             {
-                Table.ScriptFilename = SaveFileDialog(Table.ScriptFilename, out fs);
-                tabAlter.Header = Table.ScriptFilename;
-                using (StreamWriter file = new StreamWriter(fs, encoding))
+                string filename = SaveFileDialog(Table.ScriptFilename, out fs);
+                //tabAlter.Header = Table.ScriptFilename;
+                if (fs != null)
                 {
-                    file.WriteLine(tbScriptCreate.Text);
-                }
-                if (CurrentScript != null)
-                {
-                    CurrentScript.ScriptFilename = Table.ScriptFilename;
-                    CurrentScript.Table.Fill(Table);
-                    tabTask.Focus();
-                    dgScripts.Focus();
+                    using (StreamWriter file = new StreamWriter(fs, encoding))
+                    {
+                        file.WriteLine(tbScriptCreate.Text);
+                        dgFilesInTaskRefresh();
+                    }
+                    /*                if (CurrentScript != null)
+                                    {
+                                        CurrentScript.ScriptFilename = Table.ScriptFilename;
+                                        CurrentScript.Table.Fill(Table);
+                                        tabTask.Focus();
+                                        dgScripts.Focus();
+                                    }*/
                 }
             }
             finally
@@ -428,13 +432,13 @@ ORDER BY alterobjectlog_insdt desc limit 10";
         private void btClipboardCreate_Click(object sender, RoutedEventArgs e)
         {
             Clipboard.SetText(tbScriptCreate.Text);
-            if (CurrentScript != null)
+/*            if (CurrentScript != null)
             {
                 CurrentScript.ScriptFilename = Table.ScriptFilename;
                 CurrentScript.Table.Fill(Table);
                 tabTask.Focus();
                 dgScripts.Focus();
-            }
+            }*/
         }
 
         private void dgFieldsRefresh()
@@ -938,9 +942,11 @@ where lower(t.schema_name + '.' + t.table_name) = '" + Table.TableOrig.FullTable
 
                     this.Cursor = Cursors.Wait;
                     tbScriptCreate.Clear();
-                    tbScriptCreate.Text = Table.GenerateScript();
+                    string title = "";
+                    if (Task != null) title = Task.TaskInfoToScript;
+                    tbScriptCreate.Text = Table.GenerateScript(title);
                     tabScriptCreate.IsSelected = true;
-                    tabAlter.Header = Table.ScriptFilename;
+                    //tabAlter.Header = Table.ScriptFilename;
                 }
                 catch (Exception ex)
                 {

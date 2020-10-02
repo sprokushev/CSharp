@@ -30,14 +30,10 @@
                     <TextBox x:Name="tbTaskDesc" HorizontalAlignment="Left" Height="85" Margin="10,115,0,0" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" VerticalAlignment="Top" Width="569" TextChanged="tbTaskDesc_TextChanged"/>
                     <Label Content="Исполнитель:" HorizontalAlignment="Left" Margin="6,201,0,0" Height="26" VerticalAlignment="Top"/>
                     <TextBox x:Name="tbTaskExecutor" HorizontalAlignment="Left" Height="23" Margin="100,205,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="479" TextChanged="tbTaskExecutor_TextChanged" LostFocus="tbTaskExecutor_LostFocus"/>
-                    <Label Content="Скрипты:" HorizontalAlignment="Left" Margin="6,230,0,0" Height="26" VerticalAlignment="Top"/>
-                    <DataGrid x:Name="dgScripts" AutoGenerateColumns="False" Margin="0,260,0,50" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False" MouseDoubleClick="dgScripts_MouseDoubleClick">
+                    <DataGrid x:Name="dgFilesInTask" AutoGenerateColumns="False" ItemsSource="{Binding Code}" Margin="0,233,0,50" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False">
                         <DataGrid.Columns>
-                            <DataGridTextColumn x:Name="ScriptName" Header="Название" Width="300" Binding="{Binding Path=ScriptName}" />
-                            <DataGridComboBoxColumn x:Name="ScriptTypename" Header="Тип скрипта" Width="150" 
-                                            SelectedValueBinding="{Binding ScriptType_string, Mode=TwoWay}"  
-                                            DisplayMemberPath="{Binding ScriptType_string}" />
-                            <DataGridTextColumn x:Name="ScriptFilename" Header="Имя файла" Width="600" Binding="{Binding Path=ScriptFilename}" IsReadOnly="True" />
+                            <DataGridTextColumn Binding="{Binding}" 
+                                Width="600" Header="Файл" IsReadOnly="true" />
                         </DataGrid.Columns>
                         <DataGrid.ContextMenu>
                             <ContextMenu>

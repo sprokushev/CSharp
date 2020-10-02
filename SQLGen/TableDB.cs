@@ -84,24 +84,24 @@ namespace SQLGen
         public string SQLScript { get; set; }
 
         // имя файла со скриптом
-        string _filename;
+        //string _filename;
         public string ScriptFilename 
         {
             get
             {
-                if ((_filename == null) || (_filename == ""))
+//                if ((_filename == null) || (_filename == ""))
                 {
                     string s = this.TargetDBTypeToFilename + " " + this.TaskNumber;
-                    if (this.TableEdit.TableName != "") s = s + " " + this.TableEdit.TableName;
+                    if (this.TableEdit.TableName != "") s = s + " " + this.TableEdit.FullTableNameToScript.Replace('.','_');
                     s = s + " " + this.ScriptTypeToFilename + ".sql";
                     return s;
                 }
-                else return _filename.Trim();
+  //              else return _filename.Trim();
             }
-            set
+/*            set
             {
                 _filename = value.Trim();
-            }
+            }*/
         }
 
 
@@ -127,7 +127,7 @@ namespace SQLGen
                 this.TableEdit.Fill(_table.TableEdit);
                 this.isAddDrop = _table.isAddDrop;
                 this.SQLScript = _table.SQLScript;
-                this.ScriptFilename = _table.ScriptFilename;
+                //this.ScriptFilename = _table.ScriptFilename;
             }
         }
 
@@ -170,7 +170,7 @@ namespace SQLGen
         }
 
 
-        public string GenerateScript ()
+        public string GenerateScript (string TitleScript)
         {
             string ScriptTable = "";
             string ScriptRow = "";
@@ -496,7 +496,11 @@ GO";
 
             }
 
-            return ScriptDrop + ScriptTable + ScriptPK + ScriptFK + ScriptTableDesc + ScriptFieldDesc + ScriptDropField + ScriptIdent + ScriptProc + "\n";
+            // заголовок скрипта (информация о задаче)
+            if (TitleScript == null) TitleScript = "";
+            if (TitleScript != "") TitleScript = TitleScript + Environment.NewLine;
+
+            return TitleScript + ScriptDrop + ScriptTable + ScriptPK + ScriptFK + ScriptTableDesc + ScriptFieldDesc + ScriptDropField + ScriptIdent + ScriptProc + "\n";
 
         }
 

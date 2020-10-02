@@ -28,14 +28,14 @@ namespace SQLGen
             set
             {
                 this._task = value.Trim();
-                if (Scripts != null)
+/*                if (Scripts != null)
                 {
                     foreach (var item in Scripts)
                     {
                         if (item.Table != null) item.Table.TaskNumber = this._task;
                         if (item.Query != null) item.Query.TaskNumber = this._task;
                     }
-                }
+                }*/
             }
         }
 
@@ -50,28 +50,46 @@ namespace SQLGen
         public string TaskExecutor { get; set; }
 
         // скрипты по задаче
-        public List<Script> Scripts { get; set; }
+        //public List<Script> Scripts { get; set; }
 
         public Task()
         {
-            this.Scripts = new List<Script>();
+            //this.Scripts = new List<Script>();
         }
 
+        // информация о задаче в скрипт
+        public string TaskInfoToScript
+        {
+            get
+            {
+                string s = "";
+
+                s = "/*";
+                s = s + Environment.NewLine + "-- Author: " + this.TaskExecutor;
+                s = s + Environment.NewLine + "-- Change: " + this.TaskUrl;
+                s = s + Environment.NewLine + "-- Description: ";
+                s = s + Environment.NewLine + this.TaskDesc;
+                s = s + Environment.NewLine + "*/";
+                return s;
+            }
+        }
 
         // Найти скрипт по имени
-        public Script FindScriptByName(string name)
+/*      public Script FindScriptByName(string name)
         {
             return this.Scripts.Find(x => x.ScriptName.ToLower() == name.ToLower());
         }
+*/
 
         // Найти скрипт по имени файла
-        public Script FindScriptByFilename(string name)
+/*      public Script FindScriptByFilename(string name)
         {
             return this.Scripts.Find(x => x.ScriptFilename.ToLower() == name.ToLower());
         }
+*/
 
         // Добавить новый скрипт в список
-        public Script AddScript(string ScriptName, BaseScriptType Type, string ScriptFilename, TableDB Table, QueryDB Query)
+/*        public Script AddScript(string ScriptName, BaseScriptType Type, string ScriptFilename, TableDB Table, QueryDB Query)
         {
             Script newScript = new Script();
 
@@ -108,9 +126,11 @@ namespace SQLGen
 
             return newScript;
         }
+*/
 
     }
 
+/*
     public class Script
     {
 
@@ -171,20 +191,21 @@ namespace SQLGen
         // ссылка на объект скрипта
         public TableDB Table { get; set; }
         public QueryDB Query { get; set; }
-    }
 
+    }
+*/
 
     public partial class MainWindow : Window
     {
 
         public Task Task;
-        public Script CurrentScript;
+//        public Script CurrentScript;
 
-        public List<string> ScriptTypenames = new List<string> {
+/*        public List<string> ScriptTypenames = new List<string> {
             "ALTER",
             "DATA",
         };
-
+*/
         public void SetTask(Task _task)
         {
 
@@ -207,10 +228,11 @@ namespace SQLGen
             tbTaskDesc.Text = "";
             tbTaskExecutor.Text = (string)Microsoft.Win32.Registry.GetValue(keyName, "TaskExecutor", "sergey.prokushev@rtmis.ru");
             tbTaskFolder.Text = (string)Microsoft.Win32.Registry.GetValue(keyName, "TaskFolder", "");
+            Table.TaskNumber = "";
+            Query.TaskNumber = "";
 
-            ScriptTypename.ItemsSource = ScriptTypenames;
-            Task.Scripts.Clear();
-            dgScripts.ItemsSource = Task.Scripts;
+            //            ScriptTypename.ItemsSource = ScriptTypenames;
+            //            Task.Scripts.Clear();
 
             if (_task != null)
             {
@@ -219,20 +241,23 @@ namespace SQLGen
                 tbTaskDesc.Text = _task.TaskDesc;
                 tbTaskExecutor.Text = _task.TaskExecutor;
 
-                if (_task.Scripts != null)
-                {
-                    foreach (var item in _task.Scripts)
-                    {
-                        Task.AddScript(item.ScriptName, item.Type, item.ScriptFilename, item.Table, item.Query);
-                    }
-                }
+                Table.TaskNumber = _task.TaskNumber;
+                Query.TaskNumber = _task.TaskNumber;
+
+                /*                if (_task.Scripts != null)
+                                {
+                                    foreach (var item in _task.Scripts)
+                                    {
+                                        Task.AddScript(item.ScriptName, item.Type, item.ScriptFilename, item.Table, item.Query);
+                                    }
+                                }*/
 
             }
 
-            tabAlter.Header = "Структура";
-            tabData.Header = "Данные";
+            //tabAlter.Header = "Структура";
+            //tabData.Header = "Данные";
             tabTask.Focus();
-            dgScriptsRefresh();
+            dgFilesInTaskRefresh();
             tbTaskNumber.Focus();
         }
 
@@ -268,20 +293,22 @@ namespace SQLGen
             }
         }
 
-        private void dgScriptsRefresh()
+        private void dgFilesInTaskRefresh()
         {
-            ListCollectionView cvTasks = (ListCollectionView)CollectionViewSource.GetDefaultView(dgScripts.ItemsSource);
+            dgFilesInTask.ItemsSource = ListFilesInTask();
 
-            if (cvTasks.IsAddingNew) cvTasks.CommitNew();
-            if (cvTasks.IsEditingItem) cvTasks.CommitEdit();
+ //           ListCollectionView cvTasks = (ListCollectionView)CollectionViewSource.GetDefaultView(dgFilesInTask.ItemsSource);
 
-            if (cvTasks != null && cvTasks.CanSort == true)
+//            if (cvTasks.IsAddingNew) cvTasks.CommitNew();
+//            if (cvTasks.IsEditingItem) cvTasks.CommitEdit();
+
+ /*           if (cvTasks != null && cvTasks.CanSort == true)
             {
                 cvTasks.SortDescriptions.Clear();
-                cvTasks.SortDescriptions.Add(new SortDescription("ScriptName", ListSortDirection.Ascending));
+                cvTasks.SortDescriptions.Add(new SortDescription("FilenameInTask", ListSortDirection.Ascending));
             }
-
-            dgScripts.Items.Refresh();
+            */
+            dgFilesInTask.Items.Refresh();
         }
 
         private void tbGoUrl_Click(object sender, RoutedEventArgs e)
@@ -307,19 +334,19 @@ namespace SQLGen
 
         private void DeleteScript_Click(object sender, RoutedEventArgs e)
         {
-            tabTask.Focus();
+/*            tabTask.Focus();
             dgScripts.Focus();
             if (dgScripts.SelectedIndex >= 0)
             {
                 Script script = dgScripts.SelectedItem as Script;
                 Task.Scripts.Remove(script);
                 dgScriptsRefresh();
-            }
+            }*/
         }
 
         private void AddAlterScript_Click(object sender, RoutedEventArgs e)
         {
-            tabTask.Focus();
+/*            tabTask.Focus();
             dgScripts.Focus();
             if (tbTaskNumber.Text.Trim() == "")
             {
@@ -333,12 +360,12 @@ namespace SQLGen
                 CurrentScript.Query = null;
                 SetTable(CurrentScript.Table);
                 dgScriptsRefresh();
-            }
+            }*/
         }
 
         private void AddDataScript_Click(object sender, RoutedEventArgs e)
         {
-            tabTask.Focus();
+/*            tabTask.Focus();
             dgScripts.Focus();
             if (tbTaskNumber.Text.Trim() == "")
             {
@@ -352,11 +379,13 @@ namespace SQLGen
                 CurrentScript.Table = null;
                 SetQuery(CurrentScript.Query);
                 dgScriptsRefresh();
-            }
+            }*/
         }
 
         private void tbTaskNumber_LostFocus(object sender, RoutedEventArgs e)
         {
+            bool Changed = (Task.TaskNumber != tbTaskNumber.Text.Trim());
+
             Task.TaskNumber = tbTaskNumber.Text;
 
             string TaskUrlDefault = (string)Microsoft.Win32.Registry.GetValue(keyName, "TaskUrlDefault", "https://jira.is-mis.ru/browse/");
@@ -370,11 +399,13 @@ namespace SQLGen
                 System.IO.DirectoryInfo di = System.IO.Directory.CreateDirectory(dir);
             }
 
+            if (Changed) dgFilesInTaskRefresh();
+
         }
 
         private void dgScripts_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if ((dgScripts != null) && (dgScripts.SelectedItem != null))
+/*            if ((dgScripts != null) && (dgScripts.SelectedItem != null))
             {
                 CurrentScript = dgScripts.SelectedItem as Script;
                 switch (CurrentScript.Type)
@@ -388,24 +419,31 @@ namespace SQLGen
                     default:
                         break;
                 }
-            }
+            }*/
 
         }
 
         private void btFolder_Click(object sender, RoutedEventArgs e)
         {
             string dir = FolderBrowserDialog(tbTaskFolder.Text);
-            if (dir != "") tbTaskFolder.Text = dir;
+            if (dir != "") 
+            {
+                tbTaskFolder.Text = dir;
+                tbTaskFolder_LostFocus(sender, e);
+                dgFilesInTaskRefresh();
+            }
         }
 
         private void tbTaskFolder_LostFocus(object sender, RoutedEventArgs e)
         {
-            Microsoft.Win32.Registry.SetValue(keyName, "TaskFolder", tbTaskFolder.Text.Trim());
+            if (tbTaskFolder.Text.Trim() != "")
+                Microsoft.Win32.Registry.SetValue(keyName, "TaskFolder", tbTaskFolder.Text.Trim());
         }
 
         private void tbTaskExecutor_LostFocus(object sender, RoutedEventArgs e)
         {
-            Microsoft.Win32.Registry.SetValue(keyName, "TaskExecutor", tbTaskExecutor.Text.Trim());
+            if (tbTaskExecutor.Text.Trim() != "")
+                Microsoft.Win32.Registry.SetValue(keyName, "TaskExecutor", tbTaskExecutor.Text.Trim());
         }
 
         private void tbTaskUrl_LostFocus(object sender, RoutedEventArgs e)
@@ -422,7 +460,7 @@ namespace SQLGen
         private void miNewTask_Click(object sender, RoutedEventArgs e)
         {
             tabTask.Focus();
-            dgScripts.Focus();
+            dgFilesInTask.Focus();
 
             if (Connect.IsConnected != ConnType.None)
             {
@@ -433,7 +471,7 @@ namespace SQLGen
         private void miSaveTask_Click(object sender, RoutedEventArgs e)
         {
             tabTask.Focus();
-            dgScripts.Focus();
+            dgFilesInTask.Focus();
 
             if (tbTaskNumber.Text.Trim() == "")
             {
@@ -450,7 +488,7 @@ namespace SQLGen
         private void miOpenTask_Click(object sender, RoutedEventArgs e)
         {
             tabTask.Focus();
-            dgScripts.Focus();
+            dgFilesInTask.Focus();
 
             string filename = OpenTaskDialog(tbTaskFolder.Text);
             if ((filename != "") && (File.Exists(filename)))
@@ -466,6 +504,45 @@ namespace SQLGen
                 }
 
         }
+
+
+        public List<string> ListFilesInTask()
+        {
+
+            List<string> res = new List<string>();
+
+            if (tbTaskNumber.Text == "") return res;
+
+            var dir = System.IO.Path.Combine(tbTaskFolder.Text, tbTaskNumber.Text);
+
+
+            if (Directory.Exists(dir))
+            {
+                res.AddRange(ProcessDirectory(dir, dir));
+            }
+
+            return res;
+        }
+
+        private List<string> ProcessDirectory(string path, string rootpath)
+        {
+            List<string> res = new List<string>();
+
+            // Process the list of files found in the directory.
+            string[] fileEntries = Directory.GetFiles(path);
+            foreach (string fileName in fileEntries)
+            {
+                res.Add(fileName.Replace(rootpath + Path.DirectorySeparatorChar, string.Empty));
+            }
+
+            // Recurse into subdirectories of this directory.
+            string[] subdirectoryEntries = Directory.GetDirectories(path);
+            foreach (string subdirectory in subdirectoryEntries)
+                res.AddRange(ProcessDirectory(subdirectory, rootpath));
+
+            return res;
+        }
+
     }
 }
 

@@ -143,24 +143,24 @@ namespace SQLGen
         public string SQLScript { get; set; }
 
         // имя файла со скриптом
-        string _filename;
+        //string _filename;
         public string ScriptFilename
         {
             get
             {
-                if ((_filename == null) || (_filename == ""))
+//                if ((_filename == null) || (_filename == ""))
                 {
                     string s = this.TargetDBTypeToFilename + " " + this.TaskNumber;
-                    if (this.TableName != "") s = s + " " + this.TableName;
+                    if (this.TableName != "") s = s + " " + this.TableName.Replace('.','_');
                     s = s + " " + this.ScriptTypeToFilename + ".sql";
                     return s;
                 }
-                else return _filename.Trim();
+//                else return _filename.Trim();
             }
-            set
+/*            set
             {
                 _filename = value.Trim();
-            }
+            }*/
         }
 
 
@@ -176,7 +176,7 @@ namespace SQLGen
                 this.PrimaryKey = _query.PrimaryKey;
                 this.SQLQuery = _query.SQLQuery;
                 this.SQLScript = _query.SQLScript;
-                this.ScriptFilename = _query.ScriptFilename;
+                //this.ScriptFilename = _query.ScriptFilename;
             }
         }
 
@@ -243,10 +243,25 @@ namespace SQLGen
         }
 
 
-        public void GenerateScript(System.IO.StreamWriter file, out string Script)
+        public void GenerateScript(string TitleScript, System.IO.StreamWriter file, out string Script)
         {
-            Script = Environment.NewLine;
-            
+            // заголовок скрипта (информация о задаче)
+            if (TitleScript == null) TitleScript = "";
+            if (TitleScript != "") Script = TitleScript + Environment.NewLine;
+            else Script = "";
+
+            // Текст запроса в комментарии
+            Script = Script + Environment.NewLine + "/* запрос к базе";
+            Script = Script + Environment.NewLine + this.SQLQuery;
+            Script = Script + Environment.NewLine + "*/";
+            Script = Script + Environment.NewLine;
+
+            if (file != null)
+            {
+                file.Write(Script);
+                Script = "";
+            }
+
             // Перед INSERT или INSERT/UPDATE
             if ((ScriptType == ScriptType.INSERT) || (ScriptType == ScriptType.INSERT_UPDATE))
             {
