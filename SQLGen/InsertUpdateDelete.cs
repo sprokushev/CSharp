@@ -233,7 +233,7 @@ namespace SQLGen
                 try
                 {
                     //tabData.Header = Query.ScriptFilename;
-                    string filename = SaveFileDialog (Query.ScriptFilename, out fs);
+                    string filename = Dlg.SaveFileDialog (Query.ScriptFilename, out fs);
                     if (fs != null)
                     {
                         using (StreamWriter file = new StreamWriter(fs, encoding))
@@ -285,7 +285,7 @@ namespace SQLGen
 
         private void tbSQL_TextChanged(object sender, TextChangedEventArgs e)
         {
-            var s_orig = tbSQL.Text.Replace(System.Environment.NewLine, " ").Replace("  "," ").Replace("  ", " ").Replace("  ", " ").Replace("  ", " ");
+            var s_orig = tbSQL.Text.Replace(System.Environment.NewLine, " ").Replace("  "," ").Replace("  ", " ").Replace("  ", " ").Replace("  ", " ").Replace("  ", " ").Replace("  ", " ");
             var s_lower = s_orig.ToLower();
             var arr = s_orig.Split(' ');
             var pos = Array.IndexOf(s_lower.Split(' '), "from");
@@ -309,7 +309,7 @@ namespace SQLGen
             try
             {
                 //tabData.Header = Query.ScriptFilename;
-                string filename = SaveFileDialog(Query.ScriptFilename, out fs);
+                string filename = Dlg.SaveFileDialog(Query.ScriptFilename, out fs);
                 if (fs != null)
                 {
                     using (StreamWriter file = new StreamWriter(fs, encoding))
@@ -364,7 +364,10 @@ namespace SQLGen
 
         private void tbTableNameSQL_TextChanged(object sender, TextChangedEventArgs e)
         {
-            string name = tbTableNameSQL.Text.Replace("[", "").Replace("]", "");
+            string name = tbTableNameSQL.Text.Replace("[", "").Replace("]", "").Trim();
+            if (name == "") name="dbo.";
+            var arr = name.Split('.');
+            if (arr.Length <= 1) name = "dbo." + name;
 
             if (Query.TableName != name)
             {

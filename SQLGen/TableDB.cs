@@ -16,6 +16,40 @@ namespace SQLGen
         // номер задачи
         public string TaskNumber { get; set; }
 
+        public string TaskNumberToFilename
+        {
+            get
+            {
+                return this.TaskNumber.Replace("-", String.Empty).Replace(" ", String.Empty).ToLower();
+            }
+        }
+
+        // номер скрипта
+        string _script_num;
+
+        [JsonIgnore]
+        public string ScriptNumber
+        {
+            get
+            {
+                if (_script_num == null) _script_num = "";
+                if (_script_num == "") _script_num = "0";
+                return _script_num;
+            }
+            set
+            {
+                _script_num = value.Trim();
+            }
+        }
+
+        public string ScriptNumberToFilename
+        {
+            get
+            {
+                return this.ScriptNumber.Replace("-", String.Empty).Replace(" ", String.Empty).ToLower();
+            }
+        }
+
         // целевая БД
         TargetDBType _targetdb;
         public TargetDBType TargetDB
@@ -40,12 +74,12 @@ namespace SQLGen
                 {
                     case TargetDBType.PGSQL:
                     case TargetDBType.PGSQL_LIQUIBASE:
-                        return "PGSQL";
+                        return "pg";
                     case TargetDBType.MSSQL:
                     case TargetDBType.MSSQL_LIQUIBASE:
                     case TargetDBType.None:
                     default:
-                        return "MSSQL";
+                        return "ms";
                 }
             }
         }
@@ -84,24 +118,18 @@ namespace SQLGen
         public string SQLScript { get; set; }
 
         // имя файла со скриптом
-        //string _filename;
         public string ScriptFilename 
         {
             get
             {
-//                if ((_filename == null) || (_filename == ""))
                 {
-                    string s = this.TargetDBTypeToFilename + " " + this.TaskNumber;
-                    if (this.TableEdit.TableName != "") s = s + " " + this.TableEdit.FullTableNameToScript.Replace('.','_');
-                    s = s + " " + this.ScriptTypeToFilename + ".sql";
+                    string s = this.TargetDBTypeToFilename + " " + this.TaskNumberToFilename + " " + this.ScriptNumberToFilename + " " + this.ScriptTypeToFilename;
+
+                    if (this.TableEdit.TableName != "") s = s + " " + this.TableEdit.TableNameToFilename;
+                    s = s + ".sql";
                     return s;
                 }
-  //              else return _filename.Trim();
             }
-/*            set
-            {
-                _filename = value.Trim();
-            }*/
         }
 
 
@@ -155,7 +183,7 @@ namespace SQLGen
                     return "EXEC sp_rename '" + TableOrig.FullTableNameToScript + "."+oldRow.FieldNameToScript+"', '" + newRow.FieldNameToScript + "', 'COLUMN';\nGO";
                 case TargetDBType.PGSQL:
                 case TargetDBType.PGSQL_LIQUIBASE:
-                    return "ALTER TABLE " + TableOrig.FullTableNameToScript + " RENAME COLUMN " + oldRow.FieldNameToScript + " TO " + newRow.FieldNameToScript + ";";
+                    return "ALTER TABLE IF EXISTS " + TableOrig.FullTableNameToScript + " RENAME COLUMN " + oldRow.FieldNameToScript + " TO " + newRow.FieldNameToScript + ";";
                 default:
                     return "";
             }
@@ -476,20 +504,20 @@ GO";
                 switch (this.TableType)
                 {
                     case TableType.EVN:
-                        ScriptProc = "\n\nSELECT * FROM dbo.xp_genevn_one('" + this.TableEdit.FullTableNameToScript + "');";
+                        ScriptProc = "\n\n--SELECT * FROM dbo.xp_genevn_one('" + this.TableEdit.FullTableNameToScript + "');";
                         if (this.TableEdit.AddGrantsToScript() != "") ScriptProc = ScriptProc + this.TableEdit.AddGrantsToScript();
                         break;
                     case TableType.PERSONEVN:
-                        ScriptProc = "\n\nSELECT * FROM dbo.xp_genpersonevn_one('" + this.TableEdit.FullTableNameToScript + "');";
+                        ScriptProc = "\n\n--SELECT * FROM dbo.xp_genpersonevn_one('" + this.TableEdit.FullTableNameToScript + "');";
                         if (this.TableEdit.AddGrantsToScript() != "") ScriptProc = ScriptProc + this.TableEdit.AddGrantsToScript();
                         break;
                     case TableType.MORBUS:
-                        ScriptProc = "\n\nSELECT * FROM dbo.xp_genmorbus_one('" + this.TableEdit.FullTableNameToScript + "');";
+                        ScriptProc = "\n\n--SELECT * FROM dbo.xp_genmorbus_one('" + this.TableEdit.FullTableNameToScript + "');";
                         if (this.TableEdit.AddGrantsToScript() != "") ScriptProc = ScriptProc + this.TableEdit.AddGrantsToScript();
                         break;
                     case TableType.DICT:
                     default:
-                        ScriptProc = "\n\nSELECT * FROM dbo.xp_gendict_one('" + this.TableEdit.FullTableNameToScript + "');";
+                        ScriptProc = "\n\n--SELECT * FROM dbo.xp_gendict_one('" + this.TableEdit.FullTableNameToScript + "');";
                         if (this.TableEdit.AddGrantsToScript() != "") ScriptProc = ScriptProc + this.TableEdit.AddGrantsToScript();
                         break;
                 }
@@ -591,6 +619,15 @@ GO";
                     default:
                         return this.TableName;
                 }
+            }
+        }
+
+        public string TableNameToFilename
+        {
+            get
+            {
+                return (this.SchemaName.Replace(" ", String.Empty).Replace(".", String.Empty) + " " + 
+                    this.TableName.Replace(" ", String.Empty).Replace(".", String.Empty)).ToLower();
             }
         }
 
@@ -776,19 +813,19 @@ GO";
         {
             if (fields == "") return "";
 
-            string res = "CREATE TABLE " + this.FullTableNameToScript + " (" + fields + "\n)";
+            string res = "";
 
             switch (this.TargetDB)
             {
                 case TargetDBType.MSSQL:
                 case TargetDBType.MSSQL_LIQUIBASE:
                     {
-                        return res + " ON [PRIMARY]\nGO";
+                        return "CREATE TABLE " + this.FullTableNameToScript + " (" + fields + "\n) ON [PRIMARY]\nGO";
                     }
                 case TargetDBType.PGSQL:
                 case TargetDBType.PGSQL_LIQUIBASE:
                     {
-                        res = res + " WITH (oids = false);"; 
+                        res = "CREATE TABLE IF NOT EXISTS " + this.FullTableNameToScript + " (" + fields + "\n) WITH (oids = false);"; 
                         /*+"\n\nALTER TABLE " + this.FullTableNameToScript + " OWNER TO developer;" +
                         "\nGRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES, TRIGGER, TRUNCATE ON " + this.FullTableNameToScript + " TO developer;" +
                         "\nGRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES, TRIGGER, TRUNCATE ON " + this.FullTableNameToScript + " TO developer_rep;";*/
@@ -827,34 +864,49 @@ GO";
                     if (oldrow.IsIdentity != newrow.IsIdentity) 
                         if (newrow.IsIdentity == true) 
                             ScriptRow = ScriptRow + " " + newrow.IsIdentityToScript;
+                    ScriptRow = ScriptRow + "\nGO";
 
                     if (oldrow.FieldDefault != newrow.FieldDefault)
-                        ScriptRow = ScriptRow + " " + newrow.FieldDefaultToScript;
+                    {
+                        ScriptRow = ScriptRow + "\nALTER TABLE " + this.FullTableNameToScript + " ADD CONSTRAINT DF_" + newrow.FieldNameToScript +
+                            " " + newrow.FieldDefaultToScript + " FOR " + newrow.FieldNameToScript;
+                        ScriptRow = ScriptRow + "\nGO";
+                    }
 
-                    ScriptRow = ScriptRow + "\nGO";
                     break;
+
                 case TargetDBType.PGSQL:
                 case TargetDBType.PGSQL_LIQUIBASE:
+
+                    ScriptRow = "do $$ BEGIN";
+                    ScriptRow = ScriptRow + "\nIF EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema = lower('" + this.SchemaNameToScript +
+                    "') AND table_name = lower('" + this.TableNameToScript + "') AND column_name = lower('" + newrow.FieldNameToScript +
+                    "') limit 1) THEN";
+
+
                     if (oldrow.FullFieldTypeToScript != newrow.FullFieldTypeToScript)
-                        ScriptRow = ScriptRow + "ALTER TABLE " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript + " TYPE " + newrow.FullFieldTypeToScript + ";";
+                    ScriptRow = ScriptRow + "\nALTER TABLE IF EXISTS " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript + " TYPE " + newrow.FullFieldTypeToScript + ";";
 
                     if (oldrow.IsIdentity != newrow.IsIdentity)
                         if (newrow.IsIdentity == true) 
-                            ScriptRow = ScriptRow + "\nALTER TABLE " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript+ " ADD "+newrow.IsIdentityToScript+";";
+                            ScriptRow = ScriptRow + "\nALTER TABLE IF EXISTS " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript+ " ADD "+newrow.IsIdentityToScript+";";
                         else
-                            ScriptRow = ScriptRow + "\nALTER TABLE " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript + " DROP IDENTITY IF EXISTS;";
+                            ScriptRow = ScriptRow + "\nALTER TABLE IF EXISTS " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript + " DROP IDENTITY IF EXISTS;";
 
                     if (oldrow.IsNotNull != newrow.IsNotNull)
                         if (newrow.IsNotNull == true) 
-                            ScriptRow = ScriptRow + "\nALTER TABLE " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript + " SET NOT NULL;";
+                            ScriptRow = ScriptRow + "\nALTER TABLE IF EXISTS " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript + " SET NOT NULL;";
                         else
-                            ScriptRow = ScriptRow + "\nALTER TABLE " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript + " DROP NOT NULL;";
+                            ScriptRow = ScriptRow + "\nALTER TABLE IF EXISTS " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript + " DROP NOT NULL;";
 
                     if (oldrow.FieldDefault != newrow.FieldDefault)
                         if (newrow.FieldDefault != "")
-                            ScriptRow = ScriptRow + "\nALTER TABLE " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript + " SET "+newrow.FieldDefaultToScript+";";
+                            ScriptRow = ScriptRow + "\nALTER TABLE IF EXISTS " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript + " SET "+newrow.FieldDefaultToScript+";";
                         else
-                            ScriptRow = ScriptRow + "\nALTER TABLE " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript + " DROP " + newrow.FieldDefaultToScript + ";";
+                            ScriptRow = ScriptRow + "\nALTER TABLE IF EXISTS " + this.FullTableNameToScript + " ALTER COLUMN " + newrow.FieldNameToScript + " DROP " + newrow.FieldDefaultToScript + ";";
+
+                    ScriptRow = ScriptRow + "\nEND IF;";
+                    ScriptRow = ScriptRow + "\nEND;$$;";
                     break;
                 default:
                     break;
@@ -882,11 +934,12 @@ GO";
                     break;
                 case TargetDBType.PGSQL:
                 case TargetDBType.PGSQL_LIQUIBASE:
-                    ScriptRow = "ALTER TABLE " + this.FullTableNameToScript + " ADD COLUMN " + row.FieldNameToScript + " " + row.FullFieldTypeToScript;
+                    ScriptRow = ScriptRow + "ALTER TABLE IF EXISTS " + this.FullTableNameToScript + " ADD COLUMN IF NOT EXISTS " + row.FieldNameToScript + " " + row.FullFieldTypeToScript;
                     if (row.IsIdentity == true) ScriptRow = ScriptRow + " " + row.IsIdentityToScript;
                     if (row.IsNotNull == true) ScriptRow = ScriptRow + " " + row.IsNotNullToScript;
                     if (row.FieldDefault != "") ScriptRow = ScriptRow + " " + row.FieldDefaultToScript;
                     ScriptRow = ScriptRow + ";";
+
                     break;
                 default:
                     break;
@@ -938,9 +991,11 @@ GO";
                 case TargetDBType.PGSQL_LIQUIBASE:
                     {
                         return "\n\n" + drop + "\nSELECT * FROM dbo.xp_GenIdentity('" + this.FullTableNameToScript + "', '" + fields + "');" +
+                            "\n/*"+
                             "\nALTER SEQUENCE " + this.FullTableNameToScript + "_" + fields + "_seq OWNER TO developer;" +
                             "\nGRANT SELECT, UPDATE, USAGE ON SEQUENCE " + this.FullTableNameToScript + "_" + fields + "_seq TO developer;" +
-                            "\nGRANT SELECT, UPDATE, USAGE ON SEQUENCE " + this.FullTableNameToScript + "_" + fields + "_seq TO developer_rep;";
+                            "\nGRANT SELECT, UPDATE, USAGE ON SEQUENCE " + this.FullTableNameToScript + "_" + fields + "_seq TO developer_rep;"+
+                            "\n*/";
 
 //                        "\n --ALTER TABLE " + this.FullTableNameToScript + " ALTER COLUMN " + fields + " ADD GENERATED BY DEFAULT AS IDENTITY;" +
 
@@ -958,21 +1013,15 @@ GO";
 
             if (this.TargetDB != TargetDBType.PGSQL) return "";
 
-            string grants = "";
+            string grants = "\n\n/*";
 
-            if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-            grants = grants + "ALTER TABLE " + this.FullTableNameToScript + " OWNER TO developer;";
-            if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-            grants = grants + "GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES, TRIGGER, TRUNCATE ON " + this.FullTableNameToScript + " TO developer;";
-            if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-            grants = grants + "GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES, TRIGGER, TRUNCATE ON " + this.FullTableNameToScript + " TO developer_rep;";
+            grants = grants + "\nALTER TABLE " + this.FullTableNameToScript + " OWNER TO developer;";
+            grants = grants + "\nGRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES, TRIGGER, TRUNCATE ON " + this.FullTableNameToScript + " TO developer;";
+            grants = grants + "\nGRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES, TRIGGER, TRUNCATE ON " + this.FullTableNameToScript + " TO developer_rep;";
 
-            if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-            grants = grants + "ALTER VIEW " + this.FullViewNameToScript + " OWNER TO developer;";
-            if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-            grants = grants + "GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES, TRIGGER, TRUNCATE ON " + this.FullViewNameToScript + " TO developer;";
-            if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-            grants = grants + "GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES, TRIGGER, TRUNCATE ON " + this.FullViewNameToScript + " TO developer_rep;";
+            grants = grants + "\nALTER VIEW " + this.FullViewNameToScript + " OWNER TO developer;";
+            grants = grants + "\nGRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES, TRIGGER, TRUNCATE ON " + this.FullViewNameToScript + " TO developer;";
+            grants = grants + "\nGRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES, TRIGGER, TRUNCATE ON " + this.FullViewNameToScript + " TO developer_rep;";
 
             Boolean IsDel = false;
             string fields = "";
@@ -984,7 +1033,7 @@ GO";
                 if ((row.FieldName.ToLower() != "pmuser_insid") && (row.FieldName.ToLower() != "pmuser_updid") && (row.FieldName.ToLower() != "pmuser_delid")
                 && (row.FieldName.ToLower() != (this.TableName.ToLower() + "_insdt")) && (row.FieldName.ToLower() != (this.TableName.ToLower() + "_upddt"))
                 && (row.FieldName.ToLower() != (this.TableName.ToLower() + "_deldt")) && (row.FieldName.ToLower() != (this.TableName.ToLower() + "_deleted"))
-                && (row.FieldName.ToLower() != (this.TableName.ToLower() + "_rowersion")))
+                && (row.FieldName.ToLower() != (this.TableName.ToLower() + "_rowversion")))
                 {
                     if (fields != "") fields = fields + ", ";
                     fields = fields + row.FieldTypeToScript;
@@ -993,36 +1042,25 @@ GO";
 
             if (IsDel)
             {
-                if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-                grants = grants + "ALTER FUNCTION " + this.FullProcDELToScript + "(BIGINT, BIGINT, BIGINT, VARCHAR, VARCHAR) OWNER TO developer;";
-                if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-                grants = grants + "GRANT EXECUTE ON FUNCTION " + this.FullProcDELToScript + "(BIGINT, BIGINT, BIGINT, VARCHAR, VARCHAR) TO developer;";
-                if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-                grants = grants + "GRANT EXECUTE ON FUNCTION " + this.FullProcDELToScript + "(BIGINT, BIGINT, BIGINT, VARCHAR, VARCHAR) TO developer_rep;";
+                grants = grants + "\nALTER FUNCTION " + this.FullProcDELToScript + "(BIGINT, BIGINT, BIGINT, VARCHAR, VARCHAR) OWNER TO developer;";
+                grants = grants + "\nGRANT EXECUTE ON FUNCTION " + this.FullProcDELToScript + "(BIGINT, BIGINT, BIGINT, VARCHAR, VARCHAR) TO developer;";
+                grants = grants + "\nGRANT EXECUTE ON FUNCTION " + this.FullProcDELToScript + "(BIGINT, BIGINT, BIGINT, VARCHAR, VARCHAR) TO developer_rep;";
             }
             else
             {
-                if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-                grants = grants + "ALTER FUNCTION " + this.FullProcDELToScript + "(BIGINT, VARCHAR, VARCHAR) OWNER TO developer;";
-                if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-                grants = grants + "GRANT EXECUTE ON FUNCTION " + this.FullProcDELToScript + "(BIGINT, VARCHAR, VARCHAR) TO developer;";
-                if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-                grants = grants + "GRANT EXECUTE ON FUNCTION " + this.FullProcDELToScript + "(BIGINT, VARCHAR, VARCHAR) TO developer_rep;";
+                grants = grants + "\nALTER FUNCTION " + this.FullProcDELToScript + "(BIGINT, VARCHAR, VARCHAR) OWNER TO developer;";
+                grants = grants + "\nGRANT EXECUTE ON FUNCTION " + this.FullProcDELToScript + "(BIGINT, VARCHAR, VARCHAR) TO developer;";
+                grants = grants + "\nGRANT EXECUTE ON FUNCTION " + this.FullProcDELToScript + "(BIGINT, VARCHAR, VARCHAR) TO developer_rep;";
             }
 
-            if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-            grants = grants + "ALTER FUNCTION " + this.FullProcINSToScript + "(" + fields + ", BIGINT, VARCHAR, VARCHAR) OWNER TO developer;";
-            if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-            grants = grants + "GRANT EXECUTE ON FUNCTION " + this.FullProcINSToScript + "(" + fields + ", BIGINT, VARCHAR, VARCHAR) TO developer;";
-            if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-            grants = grants + "GRANT EXECUTE ON FUNCTION " + this.FullProcINSToScript + "(" + fields + ", BIGINT, VARCHAR, VARCHAR) TO developer_rep;";
+            grants = grants + "\nALTER FUNCTION " + this.FullProcINSToScript + "(" + fields + ", BIGINT, VARCHAR, VARCHAR) OWNER TO developer;";
+            grants = grants + "\nGRANT EXECUTE ON FUNCTION " + this.FullProcINSToScript + "(" + fields + ", BIGINT, VARCHAR, VARCHAR) TO developer;";
+            grants = grants + "\nGRANT EXECUTE ON FUNCTION " + this.FullProcINSToScript + "(" + fields + ", BIGINT, VARCHAR, VARCHAR) TO developer_rep;";
 
-            if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-            grants = grants + "ALTER FUNCTION " + this.FullProcUPDToScript + "(" + fields + ", BIGINT, VARCHAR, VARCHAR) OWNER TO developer;";
-            if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-            grants = grants + "GRANT EXECUTE ON FUNCTION " + this.FullProcUPDToScript + "(" + fields + ", BIGINT, VARCHAR, VARCHAR) TO developer;";
-            if (grants != "") grants = grants + "\n"; else grants = "\n\n";
-            grants = grants + "GRANT EXECUTE ON FUNCTION " + this.FullProcUPDToScript + "(" + fields + ", BIGINT, VARCHAR, VARCHAR) TO developer_rep;";
+            grants = grants + "\nALTER FUNCTION " + this.FullProcUPDToScript + "(" + fields + ", BIGINT, VARCHAR, VARCHAR) OWNER TO developer;";
+            grants = grants + "\nGRANT EXECUTE ON FUNCTION " + this.FullProcUPDToScript + "(" + fields + ", BIGINT, VARCHAR, VARCHAR) TO developer;";
+            grants = grants + "\nGRANT EXECUTE ON FUNCTION " + this.FullProcUPDToScript + "(" + fields + ", BIGINT, VARCHAR, VARCHAR) TO developer_rep;";
+            grants = grants + "\n*/";
 
             return grants;
         }
@@ -1041,7 +1079,7 @@ GO";
                 case TargetDBType.PGSQL:
                 case TargetDBType.PGSQL_LIQUIBASE:
                     {
-                        return "ALTER TABLE " + this.FullTableNameToScript + " DROP COLUMN IF EXISTS " + row.FieldNameToScript + ";";
+                        return "ALTER TABLE IF EXISTS " + this.FullTableNameToScript + " DROP COLUMN IF EXISTS " + row.FieldNameToScript + ";";
                     }
                 default:
                     return "";
@@ -1055,14 +1093,15 @@ GO";
         {
             if ((row.FKNameToScript == "") || (row.FKTableToScript == "") || (row.FKFieldToScript == "")) return "";
 
-            string FK = "ALTER TABLE " + this.FullTableNameToScript + " ADD CONSTRAINT " + row.FKNameToScript + " FOREIGN KEY(" + row.FieldNameToScript + ") " +
-                "\nREFERENCES " + row.FKTableToScript + " (" + row.FKFieldToScript + ")";
+            string FK = "";
 
             switch (this.TargetDB)
             {
                 case TargetDBType.MSSQL:
                 case TargetDBType.MSSQL_LIQUIBASE:
                     {
+                        FK = "ALTER TABLE " + this.FullTableNameToScript + " ADD CONSTRAINT " + row.FKNameToScript + " FOREIGN KEY(" + row.FieldNameToScript + ") " +
+                            "\nREFERENCES " + row.FKTableToScript + " (" + row.FKFieldToScript + ")";
                         FK = FK + "\nGO";
                         FK = FK + "\nALTER TABLE " + this.FullTableNameToScript + " CHECK CONSTRAINT " + row.FKNameToScript;
                         FK = FK + "\nGO";
@@ -1078,7 +1117,14 @@ GO";
                 case TargetDBType.PGSQL:
                 case TargetDBType.PGSQL_LIQUIBASE:
                     {
+                        FK = "do $$ BEGIN";
+                        FK = FK + "\nIF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_schema = '" + this.SchemaNameToScript + 
+                            "' AND constraint_name = LOWER('" + row.FKNameToScript + "') limit 1) THEN";
+                        FK = FK + "\nALTER TABLE IF EXISTS "+this.FullTableNameToScript+" ADD CONSTRAINT "+row.FKNameToScript+" FOREIGN KEY("+row.FieldNameToScript+") "+
+                "\nREFERENCES " + row.FKTableToScript + " (" + row.FKFieldToScript + ")";
                         FK = FK + "\nON DELETE NO ACTION ON UPDATE NO ACTION NOT DEFERRABLE;";
+                        FK = FK + "\nEND IF;";
+                        FK = FK + "\nEND;$$;";
                         return FK;
                     }
                 default:
@@ -1101,7 +1147,7 @@ GO";
                 case TargetDBType.PGSQL:
                 case TargetDBType.PGSQL_LIQUIBASE:
                     {
-                        return "ALTER TABLE " + this.FullTableNameToScript + " DROP CONSTRAINT IF EXISTS " + row.FKNameToScript + ";";
+                        return "ALTER TABLE IF EXISTS " + this.FullTableNameToScript + " DROP CONSTRAINT IF EXISTS " + row.FKNameToScript + ";";
                     }
                 default:
                     return "";
@@ -1113,7 +1159,7 @@ GO";
         {
             if (this.PKNameToScript == "") this.PKName = "pk_" + this.TableName + "_id";
 
-            string cons = "ALTER TABLE " + this.FullTableNameToScript + " ADD CONSTRAINT " + this.PKNameToScript;
+            string cons = "";
             string pk = "";
 
             foreach (RowDB row in this.ListField.OrderBy(x => x.FieldOrder).Where(x => (x.IsPK==true) && (x.FieldName != "") && (x.FieldType != ""))) 
@@ -1129,14 +1175,19 @@ GO";
                 case TargetDBType.MSSQL:
                 case TargetDBType.MSSQL_LIQUIBASE:
                     {
-                        cons = cons + " PRIMARY KEY CLUSTERED (" + pk + ") WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 75) ON [PRIMARY]";
+                        cons = "ALTER TABLE " + this.FullTableNameToScript + " ADD CONSTRAINT " + this.PKNameToScript + " PRIMARY KEY CLUSTERED (" + pk + ") WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 75) ON [PRIMARY]";
                         cons = cons + "\nGO";
                         return cons;
                     }
                 case TargetDBType.PGSQL:
                 case TargetDBType.PGSQL_LIQUIBASE:
                     {
-                        cons = cons + " PRIMARY KEY (" + pk + ");";
+                        cons = "do $$ BEGIN";
+                        cons = cons + "\nIF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_schema = '" + this.SchemaNameToScript +
+                                     "' AND constraint_name = LOWER('"+ this.PKNameToScript+"') limit 1) THEN";
+                        cons = cons + "\nALTER TABLE IF EXISTS " + this.FullTableNameToScript + " ADD CONSTRAINT " + this.PKNameToScript + " PRIMARY KEY (" + pk + ");";
+                        cons = cons + "\nEND IF;";
+                        cons = cons + "\nEND;$$;";
                         return cons;
                     }
                 default:
@@ -1593,6 +1644,7 @@ GO";
                     case "FLOAT":
                     case "MONEY":
                     case "INTEGER":
+                    case "BIGINT":
                     case "INT":
                     case "BIT":
                     case "TINYINT":

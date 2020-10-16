@@ -405,7 +405,7 @@ ORDER BY alterobjectlog_insdt desc limit 10";
 
             try
             {
-                string filename = SaveFileDialog(Table.ScriptFilename, out fs);
+                string filename = Dlg.SaveFileDialog(Table.ScriptFilename, out fs);
                 //tabAlter.Header = Table.ScriptFilename;
                 if (fs != null)
                 {

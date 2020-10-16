@@ -205,8 +205,21 @@ namespace SQLGen
                 cbScriptCreateType.SelectedIndex = 0;
                 cbScriptType.SelectedIndex = 0;
 
-                // сюда добавлю обработку загрузки задачи из коммандной строки
-                SetTask(null);
+                // обработка загрузки задачи из коммандной строки
+                String[] args = App.Args;
+                if ((args != null) && (args.Length>0) && (args[0] != "") && (File.Exists(args[0])))
+                    try
+                    {
+                        string jsonString = File.ReadAllText(args[0]);
+                        Task loadTask = JsonSerializer.Deserialize<Task>(jsonString);
+                        SetTask(loadTask);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                        SetTask(null);
+                    }
+                else SetTask(null);
 
                 var item = ListConnects.Find(x => (x.DBConnectionName == Connect.DBConnectionName));
                 if ( item == null )
@@ -237,6 +250,7 @@ namespace SQLGen
         private void winMain_Closed(object sender, EventArgs e)
         {
             SaveConnects();
+            SaveTask(Task);
         }
 
     }

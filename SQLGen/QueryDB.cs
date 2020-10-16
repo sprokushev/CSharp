@@ -13,6 +13,40 @@ namespace SQLGen
         // номер задачи
         public string TaskNumber { get; set; }
 
+        public string TaskNumberToFilename
+        {
+            get
+            {
+                return this.TaskNumber.Replace("-", String.Empty).Replace(" ", String.Empty).ToLower();
+            }
+        }
+
+        // номер скрипта
+        string _script_num;
+
+        [JsonIgnore]
+        public string ScriptNumber 
+        {
+            get
+            {
+                if (_script_num == null) _script_num = "";
+                if (_script_num == "") _script_num = "0";
+                return _script_num;
+            }
+            set
+            {
+                _script_num = value.Trim();
+            }
+        }
+
+        public string ScriptNumberToFilename
+        {
+            get
+            {
+                return this.ScriptNumber.Replace("-", String.Empty).Replace(" ", String.Empty).ToLower();
+            }
+        }
+
         // целевая БД
         public TargetDBType TargetDB { get; set; }
         public string TargetDBTypeToFilename
@@ -23,12 +57,12 @@ namespace SQLGen
                 {
                     case TargetDBType.PGSQL:
                     case TargetDBType.PGSQL_LIQUIBASE:
-                        return "PGSQL";
+                        return "pg";
                     case TargetDBType.MSSQL:
                     case TargetDBType.MSSQL_LIQUIBASE:
                     case TargetDBType.None:
                     default:
-                        return "MSSQL";
+                        return "ms";
                 }
             }
         }
@@ -71,8 +105,8 @@ namespace SQLGen
         {
             get
             {
-                if (_table_name == null) return "";
-                else return _table_name.Trim();
+                if (_table_name == null) _table_name= "";
+                return _table_name;
             }
             set
             {
@@ -95,6 +129,14 @@ namespace SQLGen
                     default:
                         return this.TableName;
                 }
+            }
+        }
+
+        public string TableNameToFilename
+        {
+            get
+            {
+                return this.TableName.Replace(" ", String.Empty).Replace(".", " ").ToLower();
             }
         }
 
@@ -150,9 +192,9 @@ namespace SQLGen
             {
 //                if ((_filename == null) || (_filename == ""))
                 {
-                    string s = this.TargetDBTypeToFilename + " " + this.TaskNumber;
-                    if (this.TableName != "") s = s + " " + this.TableName.Replace('.','_');
-                    s = s + " " + this.ScriptTypeToFilename + ".sql";
+                    string s = this.TargetDBTypeToFilename + " " + this.TaskNumberToFilename + " " + this.ScriptNumberToFilename + " " + this.ScriptTypeToFilename;
+                    if (this.TableName != "") s = s + " " + this.TableNameToFilename;
+                    s = s + ".sql";
                     return s;
                 }
 //                else return _filename.Trim();

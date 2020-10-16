@@ -11,6 +11,7 @@ using System.Windows.Data;
 using System.ComponentModel;
 using System.Windows.Input;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace SQLGen
 {
@@ -28,14 +29,6 @@ namespace SQLGen
             set
             {
                 this._task = value.Trim();
-/*                if (Scripts != null)
-                {
-                    foreach (var item in Scripts)
-                    {
-                        if (item.Table != null) item.Table.TaskNumber = this._task;
-                        if (item.Query != null) item.Query.TaskNumber = this._task;
-                    }
-                }*/
             }
         }
 
@@ -49,12 +42,12 @@ namespace SQLGen
         // исполнитель задачи (автор скрипта)
         public string TaskExecutor { get; set; }
 
-        // скрипты по задаче
-        //public List<Script> Scripts { get; set; }
+        // скрипты по задаче для отправки в GIT
+        public List<GITScript> Scripts { get; set; }
 
         public Task()
         {
-            //this.Scripts = new List<Script>();
+            this.Scripts = new List<GITScript>();
         }
 
         // информация о задаче в скрипт
@@ -89,123 +82,30 @@ namespace SQLGen
 */
 
         // Добавить новый скрипт в список
-/*        public Script AddScript(string ScriptName, BaseScriptType Type, string ScriptFilename, TableDB Table, QueryDB Query)
+        public GITScript AddScript(string GITScriptname, string GITProject, string GITTypeObject, string GITSchemaObject, string GITNameObject, string GITFilename)
         {
-            Script newScript = new Script();
+            GITScript newScript = new GITScript();
 
-            newScript.Type = Type;
+            newScript.GITScriptname = GITScriptname;
+            newScript.GITProject = GITProject;
+            newScript.GITTypeObject = GITTypeObject;
+            newScript.GITShemaObject = GITSchemaObject;
+            newScript.GITNameObject = GITNameObject;
+            newScript.GITFilename = GITFilename;
 
-            if (ScriptName == "")
-            {
-                int cnt = 0;
-                if (this.Scripts != null)
-                {
-                    cnt = this.Scripts.Count;
-                    foreach (var item in Scripts)
-                    {
-                        int num = 0;
-                        if (int.TryParse(item.ScriptName, out num)) if (num > cnt) cnt = num;
-
-                    }
-                }
-                cnt++;
-                ScriptName = cnt.ToString();
-            }
-
-            newScript.ScriptName = ScriptName;
-            newScript.ScriptFilename = ScriptFilename;
-            newScript.Table = new TableDB();
-            newScript.Table.TaskNumber = this.TaskNumber;
-            if (Table != null) newScript.Table.Fill(Table);
-            newScript.Query = new QueryDB();
-            newScript.Query.TaskNumber = this.TaskNumber;
-            if (Query != null) newScript.Query.Fill(Query);
-
-            if (this.Scripts == null) this.Scripts = new List<Script>();
+            if (this.Scripts == null) this.Scripts = new List<GITScript>();
             this.Scripts.Add(newScript);
 
             return newScript;
         }
-*/
-
     }
-
-/*
-    public class Script
-    {
-
-        // название скрипта
-        string _name;
-        public string ScriptName
-        {
-            get
-            {
-                if (_name == null) return "";
-                else return _name.Trim();
-            }
-            set
-            {
-                _name = value.Trim();
-            }
-        }
-
-        // тип скрипта
-        public BaseScriptType Type { get; set; }
-        
-        [JsonIgnore]
-        public string ScriptType_string
-        {
-            get
-            {
-                switch (Type)
-                {
-                    case BaseScriptType.ALTER:
-                        return "ALTER";
-                    case BaseScriptType.DATA:
-                    default:
-                        return "DATA";
-                }
-            }
-            set
-            {
-                if (value.Trim().ToUpper() == "ALTER") Type = BaseScriptType.ALTER;
-                else Type = BaseScriptType.DATA;
-            }
-        }
-
-        // имя файла со скриптом (полный путь)
-        string _filename;
-        public string ScriptFilename
-        {
-            get
-            {
-                if (_filename == null) return "";
-                else return _filename.Trim();
-            }
-            set
-            {
-                _filename = value.Trim();
-            }
-        }
-
-        // ссылка на объект скрипта
-        public TableDB Table { get; set; }
-        public QueryDB Query { get; set; }
-
-    }
-*/
 
     public partial class MainWindow : Window
     {
 
         public Task Task;
-//        public Script CurrentScript;
+        public List<string> YmlList = new List<string>();
 
-/*        public List<string> ScriptTypenames = new List<string> {
-            "ALTER",
-            "DATA",
-        };
-*/
         public void SetTask(Task _task)
         {
 
@@ -215,11 +115,11 @@ namespace SQLGen
             {
                 var dir = System.IO.Path.Combine(tbTaskFolder.Text, Task.TaskNumber);
                 string filename = dir + "\\" + Task.TaskNumber + ".task";
-                if ( File.Exists(filename) || (System.Windows.Forms.MessageBox.Show("Сохранить задачу " + Task.TaskNumber + " в папке  " + dir + " ?", "Сохранить", System.Windows.Forms.MessageBoxButtons.YesNoCancel) == System.Windows.Forms.DialogResult.Yes)
+                if (File.Exists(filename) || (System.Windows.Forms.MessageBox.Show("Сохранить задачу " + Task.TaskNumber + " в папке  " + dir + " ?", "Сохранить", System.Windows.Forms.MessageBoxButtons.YesNoCancel) == System.Windows.Forms.DialogResult.Yes)
                    )
                 {
                     SaveTask(Task);
-                }    
+                }
 
             }
 
@@ -228,11 +128,11 @@ namespace SQLGen
             tbTaskDesc.Text = "";
             tbTaskExecutor.Text = (string)Microsoft.Win32.Registry.GetValue(keyName, "TaskExecutor", "sergey.prokushev@rtmis.ru");
             tbTaskFolder.Text = (string)Microsoft.Win32.Registry.GetValue(keyName, "TaskFolder", "");
+            tbGITFolder.Text = (string)Microsoft.Win32.Registry.GetValue(keyName, "GITFolder", "");
             Table.TaskNumber = "";
             Query.TaskNumber = "";
 
-            //            ScriptTypename.ItemsSource = ScriptTypenames;
-            //            Task.Scripts.Clear();
+            Task.Scripts.Clear();
 
             if (_task != null)
             {
@@ -244,19 +144,22 @@ namespace SQLGen
                 Table.TaskNumber = _task.TaskNumber;
                 Query.TaskNumber = _task.TaskNumber;
 
-                /*                if (_task.Scripts != null)
-                                {
-                                    foreach (var item in _task.Scripts)
-                                    {
-                                        Task.AddScript(item.ScriptName, item.Type, item.ScriptFilename, item.Table, item.Query);
-                                    }
-                                }*/
+                if (_task.Scripts != null)
+                {
+                    foreach (var item in _task.Scripts)
+                    {
+                        Task.AddScript(item.GITScriptname, item.GITProject, item.GITTypeObject, item.GITShemaObject, item.GITNameObject, item.GITFilename);
+                    }
+                }
 
             }
-
-            //tabAlter.Header = "Структура";
-            //tabData.Header = "Данные";
+            TaskNumberChanged();
+            TaskUrlChanged();
+            TaskExecutorChanged();
+            TaskFolderChanged();
+            GITFolderChanged();
             tabTask.Focus();
+            dgFilesInTask.ItemsSource = Task.Scripts;
             dgFilesInTaskRefresh();
             tbTaskNumber.Focus();
         }
@@ -279,7 +182,7 @@ namespace SQLGen
                     System.IO.DirectoryInfo di = System.IO.Directory.CreateDirectory(dir);
                 }
 
-                string filename = dir + "\\"+ _task.TaskNumber+".task";
+                string filename = dir + "\\" + _task.TaskNumber + ".task";
                 try
                 {
                     string jsonString = JsonSerializer.Serialize<Task>(_task, options);
@@ -295,23 +198,10 @@ namespace SQLGen
 
         private void dgFilesInTaskRefresh()
         {
-            dgFilesInTask.ItemsSource = ListFilesInTask();
-
- //           ListCollectionView cvTasks = (ListCollectionView)CollectionViewSource.GetDefaultView(dgFilesInTask.ItemsSource);
-
-//            if (cvTasks.IsAddingNew) cvTasks.CommitNew();
-//            if (cvTasks.IsEditingItem) cvTasks.CommitEdit();
-
- /*           if (cvTasks != null && cvTasks.CanSort == true)
-            {
-                cvTasks.SortDescriptions.Clear();
-                cvTasks.SortDescriptions.Add(new SortDescription("FilenameInTask", ListSortDirection.Ascending));
-            }
-            */
             dgFilesInTask.Items.Refresh();
         }
 
-        private void tbGoUrl_Click(object sender, RoutedEventArgs e)
+        private void btGoUrl_Click(object sender, RoutedEventArgs e)
         {
             System.Diagnostics.Process.Start(tbTaskUrl.Text);
         }
@@ -334,20 +224,20 @@ namespace SQLGen
 
         private void DeleteScript_Click(object sender, RoutedEventArgs e)
         {
-/*            tabTask.Focus();
-            dgScripts.Focus();
-            if (dgScripts.SelectedIndex >= 0)
+            tabTask.Focus();
+            dgFilesInTask.Focus();
+            if (dgFilesInTask.SelectedIndex >= 0)
             {
-                Script script = dgScripts.SelectedItem as Script;
+                GITScript script = dgFilesInTask.SelectedItem as GITScript;
                 Task.Scripts.Remove(script);
-                dgScriptsRefresh();
-            }*/
+                dgFilesInTaskRefresh();
+            }
         }
 
-        private void AddAlterScript_Click(object sender, RoutedEventArgs e)
+        private void AddScript_Click(object sender, RoutedEventArgs e)
         {
-/*            tabTask.Focus();
-            dgScripts.Focus();
+            tabTask.Focus();
+            dgFilesInTask.Focus();
             if (tbTaskNumber.Text.Trim() == "")
             {
                 MessageBox.Show("Необходимо заполнить Номер задачи !");
@@ -356,33 +246,26 @@ namespace SQLGen
             }
             else
             {
-                CurrentScript = Task.AddScript("", BaseScriptType.ALTER, "", null, null);
-                CurrentScript.Query = null;
-                SetTable(CurrentScript.Table);
-                dgScriptsRefresh();
-            }*/
-        }
+                FormAddScript dlg1 = new FormAddScript();
+                dlg1.newScript = new GITScript();
+                dlg1.TaskFolder = System.IO.Path.Combine(tbTaskFolder.Text, tbTaskNumber.Text);
+                dlg1.tbGITFolder.Text = tbGITFolder.Text.Trim();
+                foreach (var item in Dlg.ListFilesInDir(dlg1.tbGITFolder.Text, true, false, false)) dlg1.cbGITProject.Items.Add(item);
 
-        private void AddDataScript_Click(object sender, RoutedEventArgs e)
-        {
-/*            tabTask.Focus();
-            dgScripts.Focus();
-            if (tbTaskNumber.Text.Trim() == "")
-            {
-                MessageBox.Show("Необходимо заполнить Номер задачи !");
-                tbTaskNumber.Focus();
-                return;
+
+                if (dlg1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    if (Task.Scripts == null) Task.Scripts = new List<GITScript>();
+                    Task.Scripts.Add(dlg1.newScript);
+                    dgFilesInTaskRefresh();
+                }
+                dlg1.Dispose();
+
             }
-            else
-            {
-                CurrentScript = Task.AddScript("", BaseScriptType.DATA, "", null, null);
-                CurrentScript.Table = null;
-                SetQuery(CurrentScript.Query);
-                dgScriptsRefresh();
-            }*/
         }
 
-        private void tbTaskNumber_LostFocus(object sender, RoutedEventArgs e)
+
+        private void TaskNumberChanged()
         {
             bool Changed = (Task.TaskNumber != tbTaskNumber.Text.Trim());
 
@@ -392,61 +275,79 @@ namespace SQLGen
             tbTaskUrl.Text = TaskUrlDefault + tbTaskNumber.Text.Trim();
 
             var dir = System.IO.Path.Combine(tbTaskFolder.Text, tbTaskNumber.Text);
-            if ( (dir != "") && (!System.IO.Directory.Exists(dir)) &&
-                 (System.Windows.Forms.MessageBox.Show("Создать папку задачи "+ tbTaskNumber.Text+ " в каталоге задач " + tbTaskFolder.Text +" ?", "Создать", System.Windows.Forms.MessageBoxButtons.YesNoCancel) == System.Windows.Forms.DialogResult.Yes)
+            if ((dir != "") && (!System.IO.Directory.Exists(dir)) &&
+                 (System.Windows.Forms.MessageBox.Show("Создать папку задачи " + tbTaskNumber.Text + " в каталоге задач " + tbTaskFolder.Text + " ?", "Создать", System.Windows.Forms.MessageBoxButtons.YesNoCancel) == System.Windows.Forms.DialogResult.Yes)
                  )
             {
                 System.IO.DirectoryInfo di = System.IO.Directory.CreateDirectory(dir);
             }
 
             if (Changed) dgFilesInTaskRefresh();
+        }
 
+
+        private void tbTaskNumber_LostFocus(object sender, RoutedEventArgs e)
+        {
+            TaskNumberChanged();
         }
 
         private void dgScripts_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-/*            if ((dgScripts != null) && (dgScripts.SelectedItem != null))
-            {
-                CurrentScript = dgScripts.SelectedItem as Script;
-                switch (CurrentScript.Type)
-                {
-                    case BaseScriptType.ALTER:
-                        SetTable(CurrentScript.Table);
-                        break;
-                    case BaseScriptType.DATA:
-                        SetQuery(CurrentScript.Query);
-                        break;
-                    default:
-                        break;
-                }
-            }*/
+            /*            if ((dgScripts != null) && (dgScripts.SelectedItem != null))
+                        {
+                            CurrentScript = dgScripts.SelectedItem as Script;
+                            switch (CurrentScript.Type)
+                            {
+                                case BaseScriptType.ALTER:
+                                    SetTable(CurrentScript.Table);
+                                    break;
+                                case BaseScriptType.DATA:
+                                    SetQuery(CurrentScript.Query);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }*/
 
         }
 
+
+
+
         private void btFolder_Click(object sender, RoutedEventArgs e)
         {
-            string dir = FolderBrowserDialog(tbTaskFolder.Text);
-            if (dir != "") 
+            string dir = Dlg.FolderBrowserDialog(tbTaskFolder.Text);
+            if (dir != "")
             {
                 tbTaskFolder.Text = dir;
-                tbTaskFolder_LostFocus(sender, e);
+                TaskFolderChanged();
                 dgFilesInTaskRefresh();
             }
         }
 
-        private void tbTaskFolder_LostFocus(object sender, RoutedEventArgs e)
+        private void TaskFolderChanged()
         {
             if (tbTaskFolder.Text.Trim() != "")
                 Microsoft.Win32.Registry.SetValue(keyName, "TaskFolder", tbTaskFolder.Text.Trim());
         }
 
-        private void tbTaskExecutor_LostFocus(object sender, RoutedEventArgs e)
+        private void tbTaskFolder_LostFocus(object sender, RoutedEventArgs e)
+        {
+            TaskFolderChanged();
+        }
+
+        private void TaskExecutorChanged()
         {
             if (tbTaskExecutor.Text.Trim() != "")
                 Microsoft.Win32.Registry.SetValue(keyName, "TaskExecutor", tbTaskExecutor.Text.Trim());
         }
 
-        private void tbTaskUrl_LostFocus(object sender, RoutedEventArgs e)
+        private void tbTaskExecutor_LostFocus(object sender, RoutedEventArgs e)
+        {
+            TaskExecutorChanged();
+        }
+
+        private void TaskUrlChanged()
         {
             int pos = tbTaskUrl.Text.IndexOf(tbTaskNumber.Text.Trim());
             string TaskUrlDefault = tbTaskUrl.Text.Substring(0, pos).Trim();
@@ -454,7 +355,11 @@ namespace SQLGen
             {
                 Microsoft.Win32.Registry.SetValue(keyName, "TaskUrlDefault", TaskUrlDefault);
             }
+        }
 
+        private void tbTaskUrl_LostFocus(object sender, RoutedEventArgs e)
+        {
+            TaskUrlChanged();
         }
 
         private void miNewTask_Click(object sender, RoutedEventArgs e)
@@ -490,7 +395,7 @@ namespace SQLGen
             tabTask.Focus();
             dgFilesInTask.Focus();
 
-            string filename = OpenTaskDialog(tbTaskFolder.Text);
+            string filename = Dlg.OpenTaskDialog(tbTaskFolder.Text);
             if ((filename != "") && (File.Exists(filename)))
                 try
                 {
@@ -505,45 +410,133 @@ namespace SQLGen
 
         }
 
-
-        public List<string> ListFilesInTask()
+        private void btGITFolder_Click(object sender, RoutedEventArgs e)
         {
-
-            List<string> res = new List<string>();
-
-            if (tbTaskNumber.Text == "") return res;
-
-            var dir = System.IO.Path.Combine(tbTaskFolder.Text, tbTaskNumber.Text);
-
-
-            if (Directory.Exists(dir))
+            string dir = Dlg.FolderBrowserDialog(tbGITFolder.Text);
+            if (dir != "")
             {
-                res.AddRange(ProcessDirectory(dir, dir));
+                tbGITFolder.Text = dir;
+                GITFolderChanged();
             }
 
-            return res;
         }
 
-        private List<string> ProcessDirectory(string path, string rootpath)
+        private void GITFolderChanged()
         {
-            List<string> res = new List<string>();
+            if (tbGITFolder.Text.Trim() != "")
+                Microsoft.Win32.Registry.SetValue(keyName, "GITFolder", tbGITFolder.Text.Trim());
+        }
 
-            // Process the list of files found in the directory.
-            string[] fileEntries = Directory.GetFiles(path);
-            foreach (string fileName in fileEntries)
+        private void tbGITFolder_LostFocus(object sender, RoutedEventArgs e)
+        {
+            GITFolderChanged();
+        }
+
+        private void btSendGIT_Click(object sender, RoutedEventArgs e)
+        {
+
+            var Projects = Task.Scripts.GroupBy(p => p.GITProject).Select(g => g.First()).ToList();
+
+            foreach (var project in Projects)
             {
-                res.Add(fileName.Replace(rootpath + Path.DirectorySeparatorChar, string.Empty));
+                string GITProjectPath = System.IO.Path.Combine(tbGITFolder.Text, project.GITProject);
+                string GITTaskPath = System.IO.Path.Combine(tbGITFolder.Text, project.GITProject, "task");
+                string GITTaskFile = System.IO.Path.Combine(GITTaskPath, Task.TaskNumber.ToLower() + ".yml");
+
+                YmlList.Clear();
+                YmlList.Add("databaseChangeLog:");
+
+                foreach (var script in Task.Scripts.Where(s => s.GITProject == project.GITProject))
+                {
+                    if (!File.Exists(script.GITScriptname))
+                    {
+                        MessageBox.Show("Файл " + script.GITScriptname + " не существует и не будет скопирован!");
+                    }
+                    else
+                    {
+                        string GITPath = "";
+
+                        if (script.GITProject == "msdbupdate")
+                        {
+                            GITPath = System.IO.Path.Combine(GITProjectPath, script.GITTypeObject, script.GITNameObject);
+                        }
+                        else if (script.GITTypeObject == "data")
+                        {
+                            GITPath = System.IO.Path.Combine(GITProjectPath, script.GITTypeObject);
+                        }
+                        else
+                        {
+                            GITPath = System.IO.Path.Combine(GITProjectPath, script.GITShemaObject, script.GITTypeObject, script.GITNameObject);
+                        }
+
+                        string FileInGIT = System.IO.Path.Combine(GITPath, script.GITFilename);
+                        string YmlRow = "- include: { file: \".." + FileInGIT.Replace(GITProjectPath, "").Replace("\\", "/") +
+                            "\", relativeToChangelogFile: \"true\" }";
+                        YmlList.Add(YmlRow);
+
+                        if (File.Exists(FileInGIT))
+                        {
+                            MessageBox.Show("Файл " + FileInGIT + " уже выложен в GIT!");
+                        }
+                        else
+                            try
+                            {
+                                File.Copy(script.GITScriptname, FileInGIT, false);
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show("Ошибка при копировании в GIT файла " + FileInGIT + " - " + ex.Message);
+                            }
+
+                    }
+                }
+
+                if ((project.GITProject == "liquibase_project_new") && (YmlList.Count > 1))
+                {
+                    if (File.Exists(GITTaskFile))
+                    {
+                        MessageBox.Show("Файл " + GITTaskFile + " уже выложен в GIT!");
+                    }
+                    else
+                        try
+                        {
+                            System.IO.File.AppendAllLines(GITTaskFile, YmlList);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show("Ошибка при копировании в GIT файла " + GITTaskFile + " - " + ex.Message);
+                        }
+
+                }
             }
 
-            // Recurse into subdirectories of this directory.
-            string[] subdirectoryEntries = Directory.GetDirectories(path);
-            foreach (string subdirectory in subdirectoryEntries)
-                res.AddRange(ProcessDirectory(subdirectory, rootpath));
+            MessageBox.Show("Файлы отправлены в GIT!");
 
-            return res;
         }
-
     }
+
+    public class GITScript
+    {
+        // Имя исходного файла
+        public string GITScriptname { get; set; }
+
+        // Проект GIT
+        public string GITProject { get; set; }
+
+        // Тип объекта
+        public string GITTypeObject { get; set; }
+
+        // Схема
+        public string GITShemaObject { get; set; }
+
+        // Имя объекта
+        public string GITNameObject { get; set; }
+
+        // Имя файла для GIT
+        public string GITFilename { get; set; }
+    }
+
+
 }
 
 

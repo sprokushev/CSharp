@@ -30,22 +30,55 @@ namespace SQLGen
     public enum GeneralType { UNKNOWN, STRING, NUMBER, DATETIME, BOOLEAN }
 
 
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    public static class Dlg
     {
 
-        // ключ реестра для хранения параметров
-        public static string keyName { get; } = "HKEY_CURRENT_USER\\Software\\PSV";
-
-        public MainWindow()
+        public static List<string> ListFilesInDir(string dir, Boolean AddDir, Boolean AddFile, Boolean IsRecursive)
         {
-            InitializeComponent();
+
+            List<string> res = new List<string>();
+
+            if (Directory.Exists(dir))
+            {
+                res.AddRange(ProcessDirectory(dir, dir, AddDir, AddFile, IsRecursive));
+            }
+
+            return res;
+        }
+
+        private static List<string> ProcessDirectory(string path, string rootpath, Boolean AddDir, Boolean AddFile, Boolean IsRecursive)
+        {
+            List<string> res = new List<string>();
+
+            if (AddDir == false)
+            {
+                // Process the list of files found in the directory.
+                string[] fileEntries = Directory.GetFiles(path);
+                foreach (string fileName in fileEntries)
+                {
+                    res.Add(fileName.Replace(rootpath + System.IO.Path.DirectorySeparatorChar, string.Empty));
+                }
+            }
+
+            // Recurse into subdirectories of this directory.
+            string[] subdirectoryEntries = Directory.GetDirectories(path);
+            foreach (string subdirectory in subdirectoryEntries)
+            {
+                if (AddFile == false)
+                {
+                    res.Add(subdirectory.Replace(rootpath + System.IO.Path.DirectorySeparatorChar, string.Empty));
+                }
+                if (IsRecursive == true)
+                {
+                    res.AddRange(ProcessDirectory(subdirectory, rootpath, AddDir, AddFile, IsRecursive));
+                }
+            }
+
+            return res;
         }
 
 
-        public string SaveFileDialog(string filename, out FileStream fs)
+        public static string SaveFileDialog(string filename, out FileStream fs)
         {
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
             dlg.FileName = filename; // Default file name
@@ -76,11 +109,35 @@ namespace SQLGen
                 fs = new FileStream(filename, mode);
                 return filename;
             }
-            
+
             return "";
         }
 
-        public string OpenTaskDialog(string pathname)
+        public static string OpenFileDialog(string pathname)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.InitialDirectory = pathname;
+            string filename = "";
+            dlg.DefaultExt = ".sql"; // Default file extension
+            dlg.Filter = "(*.sql)|*.sql|Все файлы (*.*)|*.*"; // Filter files by extension
+            dlg.CheckFileExists = true;
+
+            Nullable<bool> result = dlg.ShowDialog();
+
+            if (result == true)
+            {
+                filename = dlg.FileName;
+
+                if (File.Exists(filename))
+                {
+                    return filename;
+                }
+            }
+
+            return "";
+        }
+
+        public static string OpenTaskDialog(string pathname)
         {
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
             dlg.InitialDirectory = pathname;
@@ -100,11 +157,11 @@ namespace SQLGen
                     return filename;
                 }
             }
-            
+
             return "";
         }
 
-        public string FolderBrowserDialog(string pathname)
+        public static string FolderBrowserDialog(string pathname)
         {
 
             using (var fbd = new System.Windows.Forms.FolderBrowserDialog())
@@ -121,6 +178,25 @@ namespace SQLGen
 
             return "";
         }
+
+    }
+
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+
+        // ключ реестра для хранения параметров
+        public static string keyName { get; } = "HKEY_CURRENT_USER\\Software\\PSV";
+
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+
+
 
     }
 }

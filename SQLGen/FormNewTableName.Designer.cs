@@ -101,6 +101,7 @@
             this.Controls.Add(this.tbOldTableName);
             this.Controls.Add(this.label1);
             this.Name = "FormNewTableName";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Смена имени таблицы";
             this.ResumeLayout(false);
             this.PerformLayout();
