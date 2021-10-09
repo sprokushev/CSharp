@@ -73,7 +73,16 @@ namespace Market
             decimal _eur = 0;
             decimal _rub = 0;
 
-            Currencies = await GetAsync<CurrencyInstrumentListResponse>(token, "https://api-invest.tinkoff.ru/openapi/market/currencies");
+            try
+            {
+                Currencies = await GetAsync<CurrencyInstrumentListResponse>(token, "https://api-invest.tinkoff.ru/openapi/market/currencies");
+            }
+            catch (Exception)
+            {
+                Currencies = null;
+            }
+            
+
             if ((Currencies != null) && (Currencies.status == "Ok") && (Currencies.payload != null) && (Currencies.payload.instruments != null))
             {
                 foreach (var item in Currencies.payload.instruments)
@@ -99,7 +108,14 @@ namespace Market
                     }
 
                     // заполняем цену
-                    var Price = await GetAsync<OrderbookResponse>(token, $"https://api-invest.tinkoff.ru/openapi/market/orderbook?figi={item.figi}&depth=1");
+                    OrderbookResponse Price=null;
+                    try
+                    {
+                      Price  = await GetAsync<OrderbookResponse>(token, $"https://api-invest.tinkoff.ru/openapi/market/orderbook?figi={item.figi}&depth=1");
+                    }
+                    catch (Exception)
+                    {
+                    }
                     if ((Price != null) && (Price.status == "Ok") && (Price.payload != null))
                     {
                         item.ValuteCurs = Price.payload.lastPrice;

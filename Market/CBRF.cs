@@ -20,7 +20,7 @@ namespace PSVClassLibrary
             XmlReader reader = XmlReader.Create(url);
             var valutes = XElement.Load(reader).Descendants("Valute");
 
-            foreach (var item in (from v in valutes where v.Element("CharCode").Value == "USD" select v.Element("Value").Value))
+            foreach (var item in (from v in valutes where v.Element("CharCode").Value == ValuteCode select v.Element("Value").Value))
             {
                 decimal.TryParse(item, out result);
             }

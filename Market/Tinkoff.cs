@@ -3,6 +3,7 @@ using PSVClassLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -34,6 +35,8 @@ namespace Market
 
             // GET-запрос
             T result = default(T);
+
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
 
             HttpResponseMessage response = await cl.GetAsync(Uri);
 

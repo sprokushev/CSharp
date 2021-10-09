@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30320.27
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBFtoSQL", "DBFtoSQL.csproj", "{A6D7763B-D035-4F19-A2DA-8F470558F93E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A6D7763B-D035-4F19-A2DA-8F470558F93E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6D7763B-D035-4F19-A2DA-8F470558F93E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6D7763B-D035-4F19-A2DA-8F470558F93E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6D7763B-D035-4F19-A2DA-8F470558F93E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8BD5798F-D29F-46F2-AB73-2694D16F93B1}
+	EndGlobalSection
+EndGlobal
