@@ -1,4 +1,6 @@
-﻿using PSVClassLibrary;
+﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+using PSVClassLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,11 +34,10 @@ namespace Market
                 Ribbon.lbEUR.Label = $"EUR={Currencies.GetValuteCursByTicker("EUR")} руб.";
             }
 
-            if ((Application != null) && (this.Application.ActiveWorkbook != null))
+            if ((this.Application != null) && (this.Application.ActiveWorkbook != null))
             {
 
-                if (this.Application != null)
-                    this.Application.StatusBar = $"Обновляем курсы валют на вкладке {ExcelListName}";
+                this.Application.StatusBar = $"Обновляем курсы валют на вкладке {ExcelListName}";
 
                 // Находим лист List
                 Excel.Worksheet ExcelListSheet = MSExcel.GetExcelSheet(this.Application.ActiveWorkbook, ExcelListName, sh => { });
@@ -61,8 +62,7 @@ namespace Market
 
                 }
 
-                if (this.Application != null)
-                    this.Application.StatusBar = false;
+                this.Application.StatusBar = false;
             }
         }
 
@@ -165,7 +165,7 @@ namespace Market
                 Currencies.status = "Ok";
             }
 
-            if ((Currencies != null) && (Currencies.status == "Ok") && (Currencies.payload != null) && (Currencies.payload.instruments != null))
+            if ((Currencies != null) && (Currencies.status == "Ok") && (Currencies.payload != null) && (Currencies.payload.instruments != null)) //-V3063
             {
                 bool _finish = false;
 

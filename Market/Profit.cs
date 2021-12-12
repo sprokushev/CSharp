@@ -1,4 +1,6 @@
-﻿using PSVClassLibrary;
+﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+using PSVClassLibrary;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -55,8 +57,7 @@ namespace Market
                     int max_columns;
                     string ticker;
 
-                    if (this.Application != null)
-                        this.Application.StatusBar = $"Собираем портфели с листов данного excel-файла";
+                    this.Application.StatusBar = $"Собираем портфели с листов данного excel-файла";
 
                     // портфель Тинькофф
                     if (TinkoffSheet != null)
@@ -179,8 +180,7 @@ namespace Market
                     max_rows = ProfitSheet.UsedRange.Rows.Count;
                     int count_rows = 1;
 
-                    if (this.Application != null)
-                        this.Application.StatusBar = $"Заполняем лист {ExcelProfitName}";
+                    this.Application.StatusBar = $"Заполняем лист {ExcelProfitName}";
 
                     // перебираем строки в excel: если есть в портфелях - заполняем, если нет - обнуляем 
                     for (int i=2; i<=max_rows; i++)
@@ -189,7 +189,7 @@ namespace Market
                         if ((ticker == null) || (ticker == "")) break;
 
                         count_rows++;
-                        if ((Profits != null) && (Profits.ContainsKey(ticker)))
+                        if (Profits.ContainsKey(ticker))
                         {
                             Profits[ticker].IsFound = true;
                             FillProfit(ProfitSheet, count_rows, ticker, Profits[ticker], HistorySheet);
@@ -199,25 +199,21 @@ namespace Market
                             FillProfit(ProfitSheet, count_rows, ticker, null, HistorySheet);
                         }
 
-                        if (this.Application != null)
-                            this.Application.StatusBar = $"Заполняем лист {ExcelProfitName} - {ticker}";
+                        this.Application.StatusBar = $"Заполняем лист {ExcelProfitName} - {ticker}";
 
                     }
 
                     // все, что не найдено - добавляем в конец таблицы
-                    if (Profits != null)
+                    foreach (var item in Profits.Values)
                     {
-                        foreach (var item in Profits.Values)
+                        if ((!item.IsFound) && (item.Count != 0)) //-V3024
                         {
-                            if ((!item.IsFound) && (item.Count != 0))
-                            {
-                                ticker = item.ticker;
-                                count_rows++;
-                                FillProfit(ProfitSheet, count_rows, ticker, item, HistorySheet);
+                            ticker = item.ticker;
+                            count_rows++;
+                            FillProfit(ProfitSheet, count_rows, ticker, item, HistorySheet);
 
-                                if (this.Application != null)
-                                    this.Application.StatusBar = $"Заполняем лист {ExcelProfitName} - {ticker}";
-                            }
+                            if (this.Application != null)
+                                this.Application.StatusBar = $"Заполняем лист {ExcelProfitName} - {ticker}";
                         }
                     }
 
@@ -248,7 +244,7 @@ namespace Market
                     string FamilyBudgetInvestField = MSExcel.GetNamedRangeValue<string>(this.Application.ActiveWorkbook, "FamilyBudgetInvest");
                     string FamilyBudgetToInvestField = MSExcel.GetNamedRangeValue<string>(this.Application.ActiveWorkbook, "FamilyBudgetToInvest");
 
-                    if ((FamilyBudgetFile != "") && (FamilyBudgetInvestField != "") && (FamilyBudgetInvestField != "") && (File.Exists(FamilyBudgetFile)))
+                    if ((FamilyBudgetFile != "") && (FamilyBudgetInvestField != "") && (FamilyBudgetToInvestField != "") && File.Exists(FamilyBudgetFile))
                     {
 
                         Excel.Workbook curWorkbook = this.Application.ActiveWorkbook;
@@ -294,7 +290,7 @@ namespace Market
         {
             if ((ProfitSheet != null) && (Row>1) && (ticker != null) && (ticker != ""))
             {
-                if ((item == null) || (item.Count == 0))
+                if ((item == null) || (item.Count == 0)) //-V3024
                 {
                     // позиции из "доходности" нет в портфелях или кол-во равно 0 - обнуляем (распродал)
                     ProfitSheet.Cells[Row, 5] = "";
@@ -391,7 +387,7 @@ namespace Market
                 get
                 {
                     double value = 0;
-                    if (Count != 0) value = Summa / Count;
+                    if (Count != 0) value = Summa / Count; //-V3024
                     return value;
                 }
             }
@@ -403,7 +399,7 @@ namespace Market
                 get
                 {
                     double value = 0;
-                    if (Count != 0) value = MarketSumma / Count;
+                    if (Count != 0) value = MarketSumma / Count; //-V3024
                     return value;
                 }
             }

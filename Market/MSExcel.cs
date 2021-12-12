@@ -1,4 +1,6 @@
-﻿using System;
+﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -99,20 +101,23 @@ namespace PSVClassLibrary
             Excel.Range rng = NamedRange(wBook, Name);
             try
             {
-                switch (rng.Value)
+                if (rng != null)
                 {
-                    case string s:
-                        return rng.Text;
-                    case T t:
-                        return rng.Value;
-                    default:
-                        return default(T);
+                    switch (rng.Value)
+                    {
+                        case string s:
+                            return rng.Text;
+                        case T t:
+                            return rng.Value;
+                        default:
+                            return default(T);
+                    }
                 }
             }
             catch
             {
-                return default(T);
             }
+            return default(T);
         }
 
         // возвращаем значение ячейки
@@ -143,8 +148,11 @@ namespace PSVClassLibrary
         public static void SetNamedRangeValue<T>(Excel.Workbook wBook, string Name, T value)
         {
             Excel.Range rng = NamedRange(wBook, Name);
-            if (value != null) rng.Value2 = value;
-            else rng.Value2 = "";
+            if (rng != null)
+            {
+                if (value != null) rng.Value2 = value; //-V3111
+                else rng.Value2 = "";
+            }
         }
 
         // поиск листа по имени

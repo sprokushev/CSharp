@@ -1,4 +1,6 @@
-﻿namespace Market
+﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+namespace Market
 {
     partial class MarketRibbon : Microsoft.Office.Tools.Ribbon.RibbonBase
     {
@@ -37,19 +39,19 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MarketRibbon));
             this.tabInvest = this.Factory.CreateRibbonTab();
             this.grpOptions = this.Factory.CreateRibbonGroup();
+            this.btnOptions = this.Factory.CreateRibbonButton();
             this.grpTinkoff = this.Factory.CreateRibbonGroup();
+            this.btnToken = this.Factory.CreateRibbonButton();
             this.grpValute = this.Factory.CreateRibbonGroup();
+            this.btnRefreshValuteCurs = this.Factory.CreateRibbonButton();
             this.lbUSD = this.Factory.CreateRibbonLabel();
             this.lbEUR = this.Factory.CreateRibbonLabel();
             this.grpStock = this.Factory.CreateRibbonGroup();
-            this.grpInvest = this.Factory.CreateRibbonGroup();
-            this.btnOptions = this.Factory.CreateRibbonButton();
-            this.btnToken = this.Factory.CreateRibbonButton();
-            this.btnRefreshValuteCurs = this.Factory.CreateRibbonButton();
             this.btnMarketList = this.Factory.CreateRibbonButton();
             this.btnRefreshAll = this.Factory.CreateRibbonButton();
             this.btnTinkoff = this.Factory.CreateRibbonButton();
             this.btnRefreshBrokers = this.Factory.CreateRibbonButton();
+            this.grpInvest = this.Factory.CreateRibbonGroup();
             this.btnBrokerBuy = this.Factory.CreateRibbonButton();
             this.btnBrokerSell = this.Factory.CreateRibbonButton();
             this.btnDividend = this.Factory.CreateRibbonButton();
@@ -79,11 +81,29 @@
             this.grpOptions.Label = "Настройка";
             this.grpOptions.Name = "grpOptions";
             // 
+            // btnOptions
+            // 
+            this.btnOptions.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.btnOptions.Image = ((System.Drawing.Image)(resources.GetObject("btnOptions.Image")));
+            this.btnOptions.Label = "Настройки Excel";
+            this.btnOptions.Name = "btnOptions";
+            this.btnOptions.ShowImage = true;
+            this.btnOptions.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnOptions_Click);
+            // 
             // grpTinkoff
             // 
             this.grpTinkoff.Items.Add(this.btnToken);
             this.grpTinkoff.Label = "Токен зарегистрирован";
             this.grpTinkoff.Name = "grpTinkoff";
+            // 
+            // btnToken
+            // 
+            this.btnToken.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.btnToken.Image = global::Market.Properties.Resources.Security;
+            this.btnToken.Label = "Токен авторизации (Тинькофф)";
+            this.btnToken.Name = "btnToken";
+            this.btnToken.ShowImage = true;
+            this.btnToken.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnToken_Click);
             // 
             // grpValute
             // 
@@ -92,6 +112,15 @@
             this.grpValute.Items.Add(this.lbEUR);
             this.grpValute.Label = "Курсы валют";
             this.grpValute.Name = "grpValute";
+            // 
+            // btnRefreshValuteCurs
+            // 
+            this.btnRefreshValuteCurs.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.btnRefreshValuteCurs.Image = global::Market.Properties.Resources.Обновить;
+            this.btnRefreshValuteCurs.Label = "Обновить курсы валют";
+            this.btnRefreshValuteCurs.Name = "btnRefreshValuteCurs";
+            this.btnRefreshValuteCurs.ShowImage = true;
+            this.btnRefreshValuteCurs.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnRefreshValuteCurs_Click);
             // 
             // lbUSD
             // 
@@ -111,42 +140,6 @@
             this.grpStock.Items.Add(this.btnRefreshBrokers);
             this.grpStock.Label = "Биржа";
             this.grpStock.Name = "grpStock";
-            // 
-            // grpInvest
-            // 
-            this.grpInvest.Items.Add(this.btnBrokerBuy);
-            this.grpInvest.Items.Add(this.btnBrokerSell);
-            this.grpInvest.Items.Add(this.btnDividend);
-            this.grpInvest.Items.Add(this.btnProfit);
-            this.grpInvest.Label = "Инвестиции";
-            this.grpInvest.Name = "grpInvest";
-            // 
-            // btnOptions
-            // 
-            this.btnOptions.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.btnOptions.Image = ((System.Drawing.Image)(resources.GetObject("btnOptions.Image")));
-            this.btnOptions.Label = "Настройки Excel";
-            this.btnOptions.Name = "btnOptions";
-            this.btnOptions.ShowImage = true;
-            this.btnOptions.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnOptions_Click);
-            // 
-            // btnToken
-            // 
-            this.btnToken.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.btnToken.Image = global::Market.Properties.Resources.Security;
-            this.btnToken.Label = "Токен авторизации (Тинькофф)";
-            this.btnToken.Name = "btnToken";
-            this.btnToken.ShowImage = true;
-            this.btnToken.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnToken_Click);
-            // 
-            // btnRefreshValuteCurs
-            // 
-            this.btnRefreshValuteCurs.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.btnRefreshValuteCurs.Image = global::Market.Properties.Resources.Обновить;
-            this.btnRefreshValuteCurs.Label = "Обновить курсы валют";
-            this.btnRefreshValuteCurs.Name = "btnRefreshValuteCurs";
-            this.btnRefreshValuteCurs.ShowImage = true;
-            this.btnRefreshValuteCurs.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnRefreshValuteCurs_Click);
             // 
             // btnMarketList
             // 
@@ -183,6 +176,15 @@
             this.btnRefreshBrokers.Name = "btnRefreshBrokers";
             this.btnRefreshBrokers.ShowImage = true;
             this.btnRefreshBrokers.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnRefreshBrokers_Click);
+            // 
+            // grpInvest
+            // 
+            this.grpInvest.Items.Add(this.btnBrokerBuy);
+            this.grpInvest.Items.Add(this.btnBrokerSell);
+            this.grpInvest.Items.Add(this.btnDividend);
+            this.grpInvest.Items.Add(this.btnProfit);
+            this.grpInvest.Label = "Инвестиции";
+            this.grpInvest.Name = "grpInvest";
             // 
             // btnBrokerBuy
             // 

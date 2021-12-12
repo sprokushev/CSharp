@@ -1,4 +1,6 @@
-﻿using PSVClassLibrary;
+﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+using PSVClassLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -75,8 +77,7 @@ namespace Market
                         }
 
                         // запрашиваем котировки
-                        if (this.Application != null)
-                            this.Application.StatusBar = $"Запрашиваем котировки ценных бумаг для портфеля {broker}";
+                        this.Application.StatusBar = $"Запрашиваем котировки ценных бумаг для портфеля {broker}";
                         
                         LoadBroker(broker, Tickers, BrokerPapers).GetAwaiter().GetResult();
                         
@@ -84,20 +85,22 @@ namespace Market
                     }
 
                     // заполняем поля в excel
-                    if (this.Application != null)
-                        this.Application.StatusBar = $"Заполняем котировки ценных бумаг для портфеля {broker} в excel";
-                    
-                    for (int _count = 2; _count <= max_rows; _count++)
-                    {
-                        string ticker = BrokerSheet.Cells[_count, TickerNameColumn].Text;
+                    this.Application.StatusBar = $"Заполняем котировки ценных бумаг для портфеля {broker} в excel";
 
-                        if (BrokerPapers.ContainsKey(ticker))
+                    if (BrokerSheet != null)
+                    {
+                        for (int _count = 2; _count <= max_rows; _count++)
                         {
-                            BrokerSheet.Cells[_count, LastDateNameColumn] = DateTime.Today;
-                            if (PriceNameColumn != 0)
-                                BrokerSheet.Cells[_count, PriceNameColumn] = BrokerPapers[ticker].lastPrice;
-                            if ((NominalNameColumn != 0) && (BrokerPapers[ticker].faceValue > 0))
-                                BrokerSheet.Cells[_count, NominalNameColumn] = BrokerPapers[ticker].faceValue;
+                            string ticker = BrokerSheet.Cells[_count, TickerNameColumn].Text;
+
+                            if (BrokerPapers.ContainsKey(ticker))
+                            {
+                                BrokerSheet.Cells[_count, LastDateNameColumn] = DateTime.Today;
+                                if (PriceNameColumn != 0)
+                                    BrokerSheet.Cells[_count, PriceNameColumn] = BrokerPapers[ticker].lastPrice;
+                                if ((NominalNameColumn != 0) && (BrokerPapers[ticker].faceValue > 0))
+                                    BrokerSheet.Cells[_count, NominalNameColumn] = BrokerPapers[ticker].faceValue;
+                            }
                         }
                     }
 

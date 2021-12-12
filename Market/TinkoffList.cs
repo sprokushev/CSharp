@@ -1,4 +1,6 @@
-﻿using PSVClassLibrary;
+﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+using PSVClassLibrary;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -46,13 +48,11 @@ namespace Market
                     ExcelListSheet.Cells[_count, 5] = "Currency";
                     ExcelListSheet.Cells[_count, ExcelList_columnValuteCurs] = "ValuteCurs";
 
-                    if (this.Application != null)
-                        this.Application.StatusBar = "Загружаем курсы валют";
+                    this.Application.StatusBar = "Загружаем курсы валют";
 
                     LoadValuteCurs().GetAwaiter().GetResult();
 
-                    if (this.Application != null)
-                        this.Application.StatusBar = $"Заполняем список валют на листе {ExcelListName}";
+                    this.Application.StatusBar = $"Заполняем список валют на листе {ExcelListName}";
 
                     // валюты
                     if ((Currencies != null) && (Currencies.status == "Ok") && (Currencies.payload != null) && (Currencies.payload.instruments != null))
@@ -72,13 +72,11 @@ namespace Market
                         }
                     }
 
-                    if (this.Application != null)
-                        this.Application.StatusBar = "Загружаем список ценных бумаг";
+                    this.Application.StatusBar = "Загружаем список ценных бумаг"; //-V3008
 
                     LoadMarket().GetAwaiter().GetResult();
 
-                    if (this.Application != null)
-                        this.Application.StatusBar = $"Заполняем список ценных бумаг на листе {ExcelListName}";
+                    this.Application.StatusBar = $"Заполняем список ценных бумаг на листе {ExcelListName}";
 
                     // ценные бумаги
                     if (ListPapers != null)

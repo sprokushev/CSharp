@@ -1,4 +1,6 @@
-﻿using PSVClassLibrary;
+﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+using PSVClassLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,18 +37,15 @@ namespace Market
                 if (TinkoffSheet != null)
                 {
 
-                    if (this.Application != null)
-                        this.Application.StatusBar = "Загружаем курсы валют";
+                    this.Application.StatusBar = "Загружаем курсы валют";
 
                     LoadValuteCurs().GetAwaiter().GetResult();
 
-                    if (this.Application != null)
-                        this.Application.StatusBar = "Загружаем список ценных бумаг из портфеля Тинькофф";
+                    this.Application.StatusBar = "Загружаем список ценных бумаг из портфеля Тинькофф";
 
                     LoadTinkoff().GetAwaiter().GetResult();
 
-                    if (this.Application != null)
-                        this.Application.StatusBar = $"Заполняем портфель Тинькофф  на листе {ExcelTinkoffName}";
+                    this.Application.StatusBar = $"Заполняем портфель Тинькофф  на листе {ExcelTinkoffName}";
 
                     // заполняем лист
                     int _count = 0;

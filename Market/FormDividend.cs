@@ -1,4 +1,6 @@
-﻿using System;
+﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -89,18 +91,26 @@ namespace Market
         {
             if (listPapers.SelectedIndex != -1)
             {
-                ticker = ((ThisAddIn.Paper)listPapers.SelectedItem).ticker;
-                name = ThisAddIn.ListPapers.FirstOrDefault(item => item.ticker == ticker).name;
-                boxCurrency.SelectedItem = ThisAddIn.ListPapers.FirstOrDefault(item => item.ticker == ticker).currency;
+                var paper = (ThisAddIn.Paper)listPapers.SelectedItem;
+                if (paper != null)
+                {
+                    ticker = paper.ticker;
 
-                string InstrumentTypeName = ThisAddIn.ListPapers.FirstOrDefault(item => item.ticker == ticker).InstrumentTypeName;
-                if (InstrumentTypeName.Contains("_BOND"))
-                {
-                    boxOperation.SelectedItem = "Купон";
-                }
-                else
-                {
-                    boxOperation.SelectedItem = "Дивиденд";
+                    paper = ThisAddIn.ListPapers.FirstOrDefault(item => item.ticker == ticker);
+                    if (paper != null)
+                    {
+                        name = paper.name;
+                        boxCurrency.SelectedItem = paper.currency;
+                        string InstrumentTypeName = paper.InstrumentTypeName;
+                        if (InstrumentTypeName.Contains("_BOND"))
+                        {
+                            boxOperation.SelectedItem = "Купон";
+                        }
+                        else
+                        {
+                            boxOperation.SelectedItem = "Дивиденд";
+                        }
+                    }
                 }
 
             }

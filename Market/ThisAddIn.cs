@@ -1,4 +1,6 @@
-﻿using System;
+﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -188,12 +190,6 @@ namespace Market
                         {
                             // считываем токен, обновляем информацию на панели о статусе регистрации токена
                             LoadToken();
-
-                            // считываем курсы валют, обновляем информацию на панели
-                            ribbon_btnRefreshValuteCursClicked();
-
-                            // считываем список ценных бумаг
-                            FillListPapersFromExcel();
                         }
                     }
 
@@ -206,8 +202,12 @@ namespace Market
 
         void Application_WorkbookOpen(Excel.Workbook Wb)
         {
-            // Первоначальное считывание данных
+            // Первоначальное считывание настроек
             LoadOptions();
+            // считываем курсы валют, обновляем информацию на панели
+            ribbon_btnRefreshValuteCursClicked();
+            // считываем список ценных бумаг
+            FillListPapersFromExcel();
         }
 
         void AppEvents_SheetChange(object Sh, Excel.Range Target)

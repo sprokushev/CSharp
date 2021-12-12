@@ -1,4 +1,6 @@
-﻿using System;
+﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -136,12 +138,19 @@ namespace Market
         {
             if (listPapers.SelectedIndex != -1)
             {
-                ticker = ((ThisAddIn.Paper)listPapers.SelectedItem).ticker;
-                name = ThisAddIn.ListPapers.FirstOrDefault(item => item.ticker == ticker).name;
-                lot = Math.Floor(ThisAddIn.ListPapers.FirstOrDefault(item => item.ticker == ticker).lot) / 1;
-                boxLot.Text = lot.ToString();
-                InstrumentTypeName = ThisAddIn.ListPapers.FirstOrDefault(item => item.ticker == ticker).InstrumentTypeName;
-                boxCurrency.SelectedItem = ThisAddIn.ListPapers.FirstOrDefault(item => item.ticker == ticker).currency;
+                var paper = ((ThisAddIn.Paper)listPapers.SelectedItem);
+                if (paper != null)
+                {
+                    ticker = paper.ticker;
+                    paper = ThisAddIn.ListPapers.FirstOrDefault(item => item.ticker == ticker);
+                    if (paper != null) {
+                        name = paper.name;
+                        lot = Math.Floor(paper.lot) / 1;
+                        boxLot.Text = lot.ToString();
+                        InstrumentTypeName = paper.InstrumentTypeName;
+                        boxCurrency.SelectedItem = paper.currency;
+                    }
+                }
             }
         }
 
@@ -173,7 +182,7 @@ namespace Market
 
         private void boxCount_Leave(object sender, EventArgs e)
         {
-            if ((lot != 0) && ((count % lot) != 0))
+            if ((lot != 0) && ((count % lot) != 0)) //-V3024
             {
                 System.Windows.Forms.MessageBox.Show($"Кол-во {count} должно быть кратно размеру лота {lot}");
 
