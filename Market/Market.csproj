@@ -327,7 +327,7 @@
     <None Include="Icons\Seek.JPG" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Icons\Dividend.JPG" />
+    <None Include="Icons\Procent.png" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

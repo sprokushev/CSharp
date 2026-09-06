@@ -207,7 +207,7 @@ namespace Market
             // btnDividend
             // 
             this.btnDividend.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.btnDividend.Image = global::Market.Properties.Resources.Dividend;
+            this.btnDividend.Image = global::Market.Properties.Resources.Procent;
             this.btnDividend.Label = "Дивиденд / купон";
             this.btnDividend.Name = "btnDividend";
             this.btnDividend.ShowImage = true;

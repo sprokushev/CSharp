@@ -120,7 +120,7 @@ namespace Market
         {
             // проверяем имя файла
             string filename = wBook.Name;
-            bool checkFile = filename.ToLower().Contains(InvestFileName.ToLower());
+            bool checkFile = filename.ToLower().Contains((InvestFileName??"").ToLower());
 
             // проверяем имя листа
             string sheetname = wBook.ActiveSheet.Name;

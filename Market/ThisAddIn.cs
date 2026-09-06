@@ -186,7 +186,7 @@ namespace Market
 
                         // проверяем имя файла
                         string filename = this.Application.ActiveWorkbook.Name;
-                        if (filename.ToLower().Contains(InvestFileName.ToLower()))
+                        if (filename.ToLower().Contains((InvestFileName??"").ToLower()))
                         {
                             // считываем токен, обновляем информацию на панели о статусе регистрации токена
                             LoadToken();
@@ -205,9 +205,9 @@ namespace Market
             // Первоначальное считывание настроек
             LoadOptions();
             // считываем курсы валют, обновляем информацию на панели
-            ribbon_btnRefreshValuteCursClicked();
+            //ribbon_btnRefreshValuteCursClicked();
             // считываем список ценных бумаг
-            FillListPapersFromExcel();
+            //FillListPapersFromExcel();
         }
 
         void AppEvents_SheetChange(object Sh, Excel.Range Target)
